@@ -31,7 +31,18 @@ Each module is designed to be imported independently, allowing you to use only t
 The SDK modules use various Python standard libraries and packages:
 
 - **Standard Library**: typing, dataclasses, datetime, asyncio, threading, enum, logging, os, pathlib, json, base64, abc, concurrent.futures
-- **Third-party**: (Add any third-party dependencies here as they are added to requirements.txt)
+- **Third-party**: Dependencies are managed in `requirements.txt`, `requirements-dev.txt`, and `requirements-test.txt`
+
+## Project Configuration
+The SDK uses modern Python packaging and development tools:
+
+- **pyproject.toml**: Project metadata, build system, and tool configurations (black, isort, mypy, pytest)
+- **setup.py**: Package installation script with version management from `src/__version__.py`
+- **MANIFEST.in**: Specifies non-Python files to include in distribution
+- **.gitignore**: Version control ignore patterns
+- **.gitattributes**: Line ending and file type handling
+- **.coveragerc**: Test coverage configuration
+- **.env.example**: Environment variable template (copy to .env for local development)
 
 ## Functions and Classes
 Each module in the `src/` directory contains its own set of functions and classes. For detailed information about specific functions and classes, refer to the README.md file in each module directory:

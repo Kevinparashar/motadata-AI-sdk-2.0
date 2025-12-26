@@ -352,6 +352,19 @@ The SDK is organized into modules, each containing specific functions and classe
 - `EventEmitter` - Event emitter for asynchronous event handling
 - `EventType` - Event type enumeration
 
+**Exceptions:**
+- `SDKError` - Base exception for all SDK errors
+- `ValidationError` - Input validation errors
+- `APIError` - API request errors
+- `DatabaseError` - Database operation errors
+- `AuthenticationError` - Authentication failures
+- And more custom exceptions
+
+**Validators:**
+- `validate_string()` - Validate and sanitize string input
+- `validate_dict()` - Validate dictionary input
+- `validate_list()` - Validate list input
+
 **Utilities:**
 - `setup_logger()` - Setup and configure a logger
 - `validate_config()` - Validate configuration dictionary
@@ -443,7 +456,45 @@ Comprehensive unit tests for all SDK components:
 - `TestJSONCodec`, `TestBase64Codec`, `TestCustomCodec` - Codec tests
 - `TestAPICommunicator`, `TestOAuth2Authenticator`, `TestJWTAuthenticator`, `TestAPIKeyAuthenticator` - API tests
 
+**Test Infrastructure:**
+- `conftest.py` - Shared pytest fixtures (sample_agent_config, sample_task, etc.)
+- `.coveragerc` - Test coverage configuration
+- `requirements-test.txt` - Test-specific dependencies
+
 **📖 For detailed API documentation**, refer to the README.md files in each module directory.
+
+## Project Configuration
+
+The SDK includes standard configuration files following industry best practices:
+
+### Core Configuration Files
+- **pyproject.toml** - Modern Python project configuration (PEP 621) with tool settings for black, isort, mypy, and pytest
+- **setup.py** - Package installation script with version management from `src/__version__.py`
+- **MANIFEST.in** - Specifies non-Python files to include in package distribution
+- **.gitignore** - Version control ignore patterns for Python projects
+- **.gitattributes** - Line ending and file type handling for cross-platform compatibility
+
+### Dependency Management
+- **requirements.txt** - Production dependencies
+- **requirements-dev.txt** - Development dependencies (linting, formatting, testing tools)
+- **requirements-test.txt** - Test-specific dependencies (pytest, coverage, etc.)
+
+### Testing & Quality
+- **.coveragerc** - Test coverage configuration with exclusions and reporting options
+- **conftest.py** - Shared pytest fixtures for all tests
+
+### Environment Configuration
+- **.env.example** - Environment variable template (copy to `.env` for local development)
+
+## Version Management
+
+The SDK version is centrally managed in `src/__version__.py`:
+```python
+from src import __version__
+print(__version__)  # "0.1.0"
+```
+
+This ensures a single source of truth for version information across the project.
 
 ## Contributing
 

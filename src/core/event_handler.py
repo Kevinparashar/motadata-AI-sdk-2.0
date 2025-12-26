@@ -4,6 +4,8 @@ Event handling logic
 from typing import Callable, Dict, List, Any, Optional
 from enum import Enum
 import threading
+import logging
+from .exceptions import EventHandlerError
 
 
 class EventType(Enum):
@@ -21,6 +23,7 @@ class EventHandler:
     def __init__(self):
         self._handlers: Dict[str, List[Callable]] = {}
         self._lock = threading.Lock()
+        self._logger = logging.getLogger(__name__)
     
     def on(self, event: str, handler: Callable) -> None:
         """Register an event handler"""
@@ -46,7 +49,9 @@ class EventHandler:
             try:
                 handler(*args, **kwargs)
             except Exception as e:
-                print(f"Error in event handler for {event}: {e}")
+                error_msg = f"Error in event handler for {event}: {e}"
+                self._logger.error(error_msg, exc_info=True)
+                raise EventHandlerError(error_msg, details={"event": event, "error": str(e)})
     
     def once(self, event: str, handler: Callable) -> None:
         """Register a one-time event handler"""

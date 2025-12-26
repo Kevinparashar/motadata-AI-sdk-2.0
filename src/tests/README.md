@@ -16,37 +16,69 @@ This module contains:
 Run the test suite:
 
 ```bash
+# Install test dependencies first
+pip install -r requirements-test.txt
+
 # Run all tests
 pytest src/tests/
 
 # Run specific test file
 pytest src/tests/test_agents.py
 
-# Run with coverage
-pytest src/tests/ --cov=src --cov-report=html
+# Run with coverage (configured in .coveragerc)
+pytest src/tests/ --cov=src --cov-report=html --cov-report=term-missing
 
 # Run specific test
-pytest src/tests/test_agents.py::test_agent_creation
+pytest src/tests/test_agents.py::TestAgent::test_agent_creation
+
+# Run tests with markers
+pytest -m unit
+pytest -m integration
+pytest -m "not slow"
 ```
 
 Tests use the pytest framework and include:
 - Unit tests for individual components
 - Integration tests for module interactions
 - Mock objects for external dependencies
-- Fixtures for common test data and setup
+- Shared fixtures in `conftest.py` for common test data and setup
 
 Each test file focuses on a specific module and tests both happy paths and error scenarios.
+
+## Test Fixtures
+The `conftest.py` file provides shared fixtures:
+- **sample_agent_config**: Sample agent configuration dictionary
+- **sample_task**: Sample task dictionary for testing
+- **sample_api_config**: Sample API configuration dictionary
+- **sample_db_config**: Sample database configuration dictionary
+
+Usage:
+```python
+def test_agent_with_fixture(sample_agent_config):
+    agent = Agent(**sample_agent_config)
+    assert agent.agent_id == "test-agent"
+```
 
 ## Libraries
 This module uses the following Python standard libraries and packages:
 
 - **unittest**: Python's built-in unit testing framework
 - **pytest**: Third-party testing framework (recommended for running tests)
+- **pytest-cov**: Test coverage plugin for pytest
+- **pytest-mock**: Mocking utilities for pytest
+- **pytest-asyncio**: Async test support
+- **coverage**: Code coverage measurement tool
 - **src.agents**: Agent and AgentCommunicator classes for testing
 - **src.ai_gateway**: AIGateway and PromptManager classes for testing
 - **src.database**: SQLDatabase, NoSQLDatabase, and VectorDatabase classes for testing
 - **src.codecs**: Codec classes for testing
 - **src.api**: APICommunicator and authentication classes for testing
+
+## Configuration Files
+- **conftest.py**: Shared pytest fixtures for all tests
+- **.coveragerc**: Coverage configuration file
+- **requirements-test.txt**: Test-specific dependencies
+- **pyproject.toml**: Pytest configuration in [tool.pytest.ini_options]
 
 ## Functions and Classes
 

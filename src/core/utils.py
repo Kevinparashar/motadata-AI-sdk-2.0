@@ -3,8 +3,9 @@ Helper functions (logging, configurations)
 """
 import logging
 import os
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from pathlib import Path
+from .exceptions import ValidationError
 
 
 def setup_logger(
@@ -45,10 +46,31 @@ def setup_logger(
 
 
 def validate_config(config: Dict[str, Any], required_keys: List[str]) -> bool:
-    """Validate configuration dictionary"""
+    """Validate configuration dictionary
+    
+    Args:
+        config: Configuration dictionary to validate
+        required_keys: List of required keys that must be present in config
+    
+    Returns:
+        True if validation passes
+    
+    Raises:
+        ValidationError: If required keys are missing from config
+    
+    Example:
+        >>> config = {"api_key": "test", "api_url": "https://api.com"}
+        >>> validate_config(config, ["api_key", "api_url"])
+        True
+        >>> validate_config(config, ["api_key", "missing"])
+        ValidationError: Missing required configuration keys: ['missing']
+    """
     missing_keys = [key for key in required_keys if key not in config]
     if missing_keys:
-        raise ValueError(f"Missing required configuration keys: {missing_keys}")
+        raise ValidationError(
+            f"Missing required configuration keys: {missing_keys}",
+            details={"missing_keys": missing_keys, "config_keys": list(config.keys())}
+        )
     return True
 
 

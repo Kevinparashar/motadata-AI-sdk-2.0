@@ -1,0 +1,10 @@
+include README.md
+include LICENSE
+include requirements.txt
+include pyproject.toml
+recursive-include src *.py
+recursive-include src *.md
+global-exclude __pycache__
+global-exclude *.py[co]
+global-exclude .git*
+
