@@ -14,7 +14,7 @@ class AIGateway:
     
     def __init__(
         self,
-        provider: str = "openai",
+        provider: str = "litellm",
         api_key: Optional[str] = None,
         config: Optional[Dict[str, Any]] = None
     ):

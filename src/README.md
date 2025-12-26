@@ -7,9 +7,9 @@ This directory contains the core source code for the Metadata Python SDK. It is 
 The `src/` directory is the main package directory containing all SDK modules:
 
 - **core/**: Core components and utilities that form the foundation of the SDK
-- **agents/**: Agent-related functionality for autonomous AI agents
-- **ai_gateway/**: AI Gateway components for integrating with various AI models
-- **database/**: Database integration modules for SQL, NoSQL, and vector databases
+- **agents/**: Agent-related functionality using Agno framework for autonomous AI agents
+- **ai_gateway/**: AI Gateway components using LiteLLM for unified access to multiple AI models
+- **database/**: PostgreSQL database integration module
 - **codecs/**: Custom encoding and decoding logic for data transformation
 - **api/**: API communication and authentication mechanisms
 - **config/**: Configuration management and logging setup
@@ -22,7 +22,7 @@ To use the SDK, import modules from the `src` package:
 from src.core.data_structures import DataModel
 from src.agents.agent import Agent
 from src.ai_gateway.gateway import AIGateway
-from src.database.sql_db import SQLDatabase
+from src.database.sql_db import PostgreSQLDatabase
 ```
 
 Each module is designed to be imported independently, allowing you to use only the components you need for your specific use case.
@@ -31,7 +31,11 @@ Each module is designed to be imported independently, allowing you to use only t
 The SDK modules use various Python standard libraries and packages:
 
 - **Standard Library**: typing, dataclasses, datetime, asyncio, threading, enum, logging, os, pathlib, json, base64, abc, concurrent.futures
-- **Third-party**: Dependencies are managed in `requirements.txt`, `requirements-dev.txt`, and `requirements-test.txt`
+- **Third-party**: 
+  - **litellm**: Unified AI gateway for multiple providers
+  - **agno**: Agent framework for autonomous AI agents
+  - **psycopg2-binary**: PostgreSQL database adapter
+  - Dependencies are managed in `requirements.txt`, `requirements-dev.txt`, and `requirements-test.txt`
 
 ## Project Configuration
 The SDK uses modern Python packaging and development tools:
@@ -48,9 +52,9 @@ The SDK uses modern Python packaging and development tools:
 Each module in the `src/` directory contains its own set of functions and classes. For detailed information about specific functions and classes, refer to the README.md file in each module directory:
 
 - **core/**: Data models, concurrency utilities, event handlers, and utility functions
-- **agents/**: Agent classes and communication handlers
-- **ai_gateway/**: AI Gateway interface, model integrations, prompt management, and I/O processing
-- **database/**: SQL, NoSQL, and vector database implementations
+- **agents/**: Agent classes using Agno framework and communication handlers
+- **ai_gateway/**: AI Gateway interface using LiteLLM, prompt management, and I/O processing
+- **database/**: PostgreSQL database implementation with connection pooling
 - **codecs/**: Encoding/decoding codecs and utilities
 - **api/**: API communication, authentication, and request/response handling
 - **config/**: Configuration management and logging setup

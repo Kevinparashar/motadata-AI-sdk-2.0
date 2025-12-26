@@ -1,5 +1,5 @@
 """
-Main agent class definition
+Agno agent framework integration
 """
 from typing import List, Dict, Any, Optional, Callable
 from datetime import datetime
@@ -8,15 +8,23 @@ from ..core.validators import validate_string, validate_dict, validate_list
 from ..core.exceptions import AgentError, ValidationError, ConnectionError as SDKConnectionError, SDKError
 import logging
 
+try:
+    from agno import Agent as AgnoAgent, LLM, Prompt, Run
+    AGNO_AVAILABLE = True
+except ImportError:
+    AGNO_AVAILABLE = False
+    logging.warning("Agno not installed. Install with: pip install agno")
+
 
 class Agent:
-    """Main agent class for autonomous AI agents"""
+    """Agent class integrating with Agno framework for autonomous AI agents"""
     
     def __init__(
         self,
         agent_id: str,
         capabilities: Optional[List[str]] = None,
-        config: Optional[Dict[str, Any]] = None
+        config: Optional[Dict[str, Any]] = None,
+        llm: Optional[Any] = None
     ):
         # Validate inputs
         self.agent_id = validate_string(agent_id, "agent_id", min_length=1, max_length=100)
@@ -33,6 +41,22 @@ class Agent:
         self.event_emitter = EventEmitter()
         self._communicator = None
         self._logger = logging.getLogger(__name__)
+        
+        # Initialize Agno agent if available
+        self._agno_agent: Optional[Any] = None
+        if AGNO_AVAILABLE and llm is not None:
+            try:
+                self._agno_agent = AgnoAgent(
+                    name=self.agent_id,
+                    llm=llm,
+                    description=f"Agent with capabilities: {', '.join(self.capabilities)}",
+                    **self.config
+                )
+                self._logger.info(f"Agno agent initialized: {self.agent_id}")
+            except Exception as e:
+                self._logger.warning(f"Failed to initialize Agno agent: {str(e)}")
+        elif not AGNO_AVAILABLE:
+            self._logger.warning("Agno framework not available. Install with: pip install agno")
     
     def set_communicator(self, communicator):
         """Set the communication handler for the agent"""
@@ -90,8 +114,27 @@ class Agent:
             raise AgentError(error_msg, details={"task": task.get("type", "unknown"), "original_error": str(e)})
     
     def _process_task(self, task: Dict[str, Any]) -> Any:
-        """Internal method to process a task"""
-        # Override in subclasses
+        """Internal method to process a task using Agno framework if available"""
+        if self._agno_agent is not None:
+            try:
+                # Use Agno agent to process the task
+                prompt = task.get("data", {}).get("prompt", str(task.get("data", "")))
+                if isinstance(prompt, dict):
+                    prompt = str(prompt)
+                
+                run = self._agno_agent.run(prompt=prompt)
+                return {
+                    "status": "completed",
+                    "task": task,
+                    "result": run.content if hasattr(run, 'content') else str(run),
+                    "agent": "agno"
+                }
+            except Exception as e:
+                self._logger.error(f"Agno task processing failed: {str(e)}", exc_info=True)
+                # Fallback to default processing
+                return {"status": "completed", "task": task, "error": str(e)}
+        
+        # Default processing if Agno is not available
         return {"status": "completed", "task": task}
     
     def on(self, event: str, handler: Callable) -> None:

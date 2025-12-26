@@ -22,9 +22,9 @@
 
 The **Metadata Python SDK** is a powerful toolkit designed to simplify the development of AI-powered applications. It provides a unified interface for:
 
-- 🤖 **AI Agents**: Create and manage autonomous AI agents that can communicate and coordinate tasks
-- 🧠 **AI Models**: Integrate with multiple AI providers (OpenAI, Anthropic, etc.) through a single interface
-- 💾 **Databases**: Work with SQL, NoSQL, and vector databases using consistent APIs
+- 🤖 **AI Agents**: Create and manage autonomous AI agents using Agno framework that can communicate and coordinate tasks
+- 🧠 **AI Models**: Integrate with multiple AI providers through LiteLLM unified interface (OpenAI, Anthropic, Gemini, etc.)
+- 💾 **Databases**: Work with PostgreSQL database using consistent APIs
 - 🔐 **Authentication**: Handle OAuth2, JWT, and API key authentication seamlessly
 - 📡 **API Communication**: Make HTTP requests and WebSocket connections with built-in error handling
 - ⚙️ **Configuration**: Manage settings and logging across your application
@@ -43,9 +43,9 @@ Instead of writing boilerplate code for each AI provider, database, or API integ
 
 ✨ **Key Capabilities:**
 
-- 🎯 **Agent Management**: Create, start, stop, and coordinate multiple AI agents
-- 🔄 **Multi-Model Support**: Easily switch between OpenAI, Anthropic, and other AI providers
-- 📊 **Database Abstraction**: Work with PostgreSQL, MySQL, MongoDB, Cassandra, FAISS, Pinecone, and more
+- 🎯 **Agent Management**: Create, start, stop, and coordinate multiple AI agents using Agno framework
+- 🔄 **Multi-Model Support**: Easily switch between AI providers (OpenAI, Anthropic, Gemini, etc.) through LiteLLM
+- 📊 **PostgreSQL Integration**: Work with PostgreSQL database using optimized connection pooling and transactions
 - 🔒 **Security First**: Built-in authentication and secure credential management
 - 🚀 **Async Support**: Full asyncio support for high-performance applications
 - 📝 **Prompt Management**: Template-based prompt system for consistent AI interactions
@@ -73,17 +73,22 @@ pip install -e .
 from src.agents.agent import Agent
 from src.ai_gateway.gateway import AIGateway
 from src.ai_gateway.model_integration import ModelIntegrationFactory
+from agno import LLM
 
-# Create an AI agent
+# Set up LiteLLM AI gateway
+gateway = AIGateway(provider="litellm", api_key="your-api-key")
+model_integration = ModelIntegrationFactory.create("litellm", api_key="your-api-key")
+gateway.set_model_integration(model_integration)
+
+# Create LLM instance for Agno
+llm = LLM(model="gpt-4", api_key="your-api-key")
+
+# Create an AI agent using Agno framework
 agent = Agent(
     agent_id="my-first-agent",
-    capabilities=["task_execution", "data_processing"]
+    capabilities=["task_execution", "data_processing"],
+    llm=llm
 )
-
-# Set up AI gateway
-gateway = AIGateway(provider="openai", api_key="your-api-key")
-model_integration = ModelIntegrationFactory.create("openai", "your-api-key")
-gateway.set_model_integration(model_integration)
 
 # Start the agent
 agent.start()
@@ -91,17 +96,17 @@ agent.start()
 # Use the agent to process tasks
 result = agent.execute_task({
     "type": "analyze",
-    "data": "Your data here"
+    "data": {"prompt": "Your task prompt here"}
 })
 ```
 
 ### 3. Connect to a Database
 
 ```python
-from src.database.sql_db import SQLDatabase
+from src.database.sql_db import PostgreSQLDatabase
 
 # Connect to PostgreSQL
-db = SQLDatabase(connection_string="postgresql://user:pass@localhost/dbname")
+db = PostgreSQLDatabase(connection_string="postgresql://user:pass@localhost/dbname")
 db.connect()
 
 # Execute queries
@@ -159,9 +164,9 @@ motadata-ai-sdk/
 │   │   └── input_output.py     # Data preprocessing
 │   │
 │   ├── database/                # Database integrations
-│   │   ├── sql_db.py           # SQL databases
-│   │   ├── no_sql_db.py        # NoSQL databases
-│   │   └── vector_db.py        # Vector databases
+│   │   ├── sql_db.py           # PostgreSQL database
+│   │   ├── no_sql_db.py        # NoSQL databases (optional)
+│   │   └── vector_db.py        # Vector databases (optional)
 │   │
 │   ├── codecs/                  # Encoding/Decoding
 │   │   ├── custom_codec.py     # Codec implementations
@@ -200,9 +205,9 @@ from src.ai_gateway.gateway import AIGateway
 from src.ai_gateway.model_integration import ModelIntegrationFactory
 from src.ai_gateway.prompt_manager import PromptManager
 
-# Initialize AI Gateway
-gateway = AIGateway(provider="openai", api_key="your-key")
-model = ModelIntegrationFactory.create("openai", "your-key")
+# Initialize AI Gateway with LiteLLM
+gateway = AIGateway(provider="litellm", api_key="your-key")
+model = ModelIntegrationFactory.create("litellm", api_key="your-key")
 gateway.set_model_integration(model)
 
 # Use prompt manager
@@ -217,15 +222,19 @@ response = gateway.generate(
 print(response)
 ```
 
-### Example 2: Multi-Agent System
+### Example 2: Multi-Agent System with Agno
 
 ```python
 from src.agents.agent import Agent
 from src.agents.agent_communication import AgentCommunicator
+from agno import LLM
 
-# Create multiple agents
-agent1 = Agent(agent_id="agent-1", capabilities=["data_collection"])
-agent2 = Agent(agent_id="agent-2", capabilities=["data_analysis"])
+# Create LLM for agents
+llm = LLM(model="gpt-4", api_key="your-api-key")
+
+# Create multiple agents using Agno framework
+agent1 = Agent(agent_id="agent-1", capabilities=["data_collection"], llm=llm)
+agent2 = Agent(agent_id="agent-2", capabilities=["data_analysis"], llm=llm)
 
 # Set up communication
 communicator = AgentCommunicator(protocol="nats")
@@ -238,26 +247,26 @@ agent2.set_communicator(communicator)
 agent1.send_message("agent-2", {"task": "analyze", "data": "..."})
 ```
 
-### Example 3: Database Operations
+### Example 3: PostgreSQL Database Operations
 
 ```python
 from src.database.sql_db import PostgreSQLDatabase
-from src.database.vector_db import PineconeDatabase
 
-# SQL Database
-sql_db = PostgreSQLDatabase(connection_string="postgresql://...")
-sql_db.connect()
-users = sql_db.execute_query("SELECT * FROM users")
+# PostgreSQL Database
+db = PostgreSQLDatabase(connection_string="postgresql://user:pass@localhost/dbname")
+db.connect()
 
-# Vector Database for AI embeddings
-vector_db = PineconeDatabase(
-    api_key="your-key",
-    environment="us-west1",
-    index_name="embeddings"
-)
-vector_db.connect()
-vector_db.upsert(vectors=[[0.1, 0.2, ...]], ids=["doc1"])
-similar = vector_db.search(query_vector=[0.1, 0.2, ...], top_k=5)
+# Execute queries
+users = db.execute_query("SELECT * FROM users WHERE status = %s", ("active",))
+
+# Execute updates
+db.execute_update("INSERT INTO users (name, email) VALUES (%s, %s)", ("John", "john@example.com"))
+
+# Transactions
+db.execute_transaction([
+    ("INSERT INTO users (name) VALUES (%s)", ("Alice",)),
+    ("UPDATE users SET status = %s WHERE name = %s", ("active", "Alice"))
+])
 ```
 
 ### Example 4: API Communication with Authentication
@@ -329,7 +338,14 @@ The SDK is built using Python's standard library and is designed to be lightweig
 
 ### Third-party Libraries
 
-Currently, the SDK uses only Python standard library. Third-party dependencies will be added to `requirements.txt` as needed.
+| Library | Purpose |
+|---------|---------|
+| **litellm** | Unified AI gateway for accessing multiple AI providers (OpenAI, Anthropic, Gemini, etc.) |
+| **agno** | Agent framework for building autonomous AI agents |
+| **psycopg2-binary** | PostgreSQL database adapter with connection pooling |
+| **requests** | HTTP library for API communication |
+| **pydantic** | Data validation and settings management |
+| **python-dotenv** | Environment variable management |
 
 ## Functions and Classes
 
@@ -386,7 +402,7 @@ The SDK is organized into modules, each containing specific functions and classe
 
 ### Agents Module (`src/agents/`)
 
-- `Agent` - Main agent class with lifecycle management
+- `Agent` - Main agent class integrating with Agno framework for intelligent task processing
 - `AgentCommunicator` - Base communicator for agent-to-agent communication
 - `NATSCommunicator` - NATS-specific communicator implementation
 
@@ -394,9 +410,8 @@ The SDK is organized into modules, each containing specific functions and classe
 
 - `AIGateway` - Main gateway interface for AI model interactions
 - `ModelProvider` - Abstract base class for model providers
-- `OpenAIProvider` - OpenAI model provider implementation
-- `AnthropicProvider` - Anthropic (Claude) model provider implementation
-- `ModelIntegrationFactory` - Factory for creating model integrations
+- `LiteLLMProvider` - LiteLLM provider implementation (unified interface for OpenAI, Anthropic, Gemini, etc.)
+- `ModelIntegrationFactory` - Factory for creating LiteLLM model integrations
 - `PromptManager` - Manager for prompts and templates
 - `PromptTemplate` - Prompt template class
 - `preprocess_input()` - Preprocess input data for AI model
@@ -407,17 +422,16 @@ The SDK is organized into modules, each containing specific functions and classe
 
 ### Database Module (`src/database/`)
 
-**SQL Databases:**
-- `SQLDatabase` - SQL database connection and operations
-- `PostgreSQLDatabase` - PostgreSQL-specific implementation
-- `MySQLDatabase` - MySQL-specific implementation
+**PostgreSQL Database (Primary):**
+- `PostgreSQLDatabase` - PostgreSQL database connection and operations with connection pooling (psycopg2)
+- `SQLDatabase` - Alias for PostgreSQLDatabase (backward compatibility)
 
-**NoSQL Databases:**
+**NoSQL Databases (Optional):**
 - `NoSQLDatabase` - Base NoSQL database connection and operations
 - `MongoDBDatabase` - MongoDB-specific implementation
 - `CassandraDatabase` - Cassandra-specific implementation
 
-**Vector Databases:**
+**Vector Databases (Optional):**
 - `VectorDatabase` - Base vector database for similarity search
 - `FAISSDatabase` - FAISS vector database implementation
 - `PineconeDatabase` - Pinecone vector database implementation

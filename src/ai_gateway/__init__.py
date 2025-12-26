@@ -10,8 +10,7 @@ from .input_output import (
     format_messages
 )
 from .model_integration import (
-    OpenAIProvider,
-    AnthropicProvider,
+    LiteLLMProvider,
     ModelIntegrationFactory
 )
 from .prompt_manager import PromptManager, PromptTemplate
@@ -24,8 +23,7 @@ __all__ = [
     "normalize_text",
     "chunk_text",
     "format_messages",
-    "OpenAIProvider",
-    "AnthropicProvider",
+    "LiteLLMProvider",
     "ModelIntegrationFactory",
     "PromptManager",
     "PromptTemplate",

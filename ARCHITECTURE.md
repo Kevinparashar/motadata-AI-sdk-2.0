@@ -71,9 +71,9 @@ graph TB
     end
     
     subgraph "Functional Modules"
-        AGENT[Agents Module]
-        AI[AI Gateway]
-        DB[Database Module]
+        AGENT[Agents Module<br/>Agno Framework]
+        AI[AI Gateway<br/>LiteLLM]
+        DB[Database Module<br/>PostgreSQL]
         API[API Module]
         CODEC[Codecs Module]
         CONFIG[Config Module]
@@ -81,8 +81,8 @@ graph TB
     end
     
     subgraph "External Services"
-        AI_PROV[AI Providers<br/>OpenAI, Anthropic]
-        DB_SERV[Databases<br/>PostgreSQL, MongoDB, Vector DBs]
+        LITELLM[LiteLLM<br/>Unified AI Gateway<br/>OpenAI, Anthropic, Gemini]
+        POSTGRES[PostgreSQL<br/>Database]
         EXT_API[External APIs]
         MSG[Message Queue<br/>NATS]
         MONITOR[Monitoring Tools<br/>Prometheus, Datadog,<br/>Jaeger]
@@ -96,14 +96,15 @@ graph TB
     AGENT --> CORE
     AGENT --> API
     AGENT --> MSG
+    AGENT --> LITELLM
     
     AI --> CORE
     AI --> API
     AI --> CODEC
-    AI --> AI_PROV
+    AI --> LITELLM
     
     DB --> CORE
-    DB --> DB_SERV
+    DB --> POSTGRES
     
     API --> CORE
     API --> CODEC
@@ -266,15 +267,16 @@ graph TD
 
 ## Workflow Diagrams
 
-### 1. Agent Task Execution Workflow
+### 1. Agent Task Execution Workflow (Agno)
 
 ```mermaid
 sequenceDiagram
     participant App as Application
-    participant Agent as Agent Module
+    participant Agent as Agent Module<br/>(Agno)
     participant Validator as Validators
-    participant AI as AI Gateway
-    participant DB as Database
+    participant Agno as Agno Framework
+    participant LiteLLM as LiteLLM Gateway
+    participant DB as PostgreSQL
     participant Event as Event Handler
     
     App->>Agent: execute_task(task)
@@ -282,8 +284,10 @@ sequenceDiagram
     alt Validation Success
         Validator-->>Agent: Validated Task
         Agent->>Event: emit("task_started")
-        Agent->>AI: generate_response(prompt)
-        AI-->>Agent: AI Response
+        Agent->>Agno: process_task(prompt)
+        Agno->>LiteLLM: generate_response()
+        LiteLLM-->>Agno: AI Response
+        Agno-->>Agent: Processed Result
         Agent->>DB: save_result(data)
         DB-->>Agent: Success
         Agent->>Event: emit("task_completed")
@@ -295,15 +299,15 @@ sequenceDiagram
     end
 ```
 
-### 2. AI Gateway Request Workflow
+### 2. AI Gateway Request Workflow (LiteLLM)
 
 ```mermaid
 sequenceDiagram
     participant App as Application
     participant Gateway as AI Gateway
     participant Validator as Validators
-    participant Provider as Model Provider
-    participant API as API Module
+    participant LiteLLM as LiteLLM Provider
+    participant AI_API as AI Provider APIs<br/>(OpenAI, Anthropic, etc.)
     participant Codec as Codecs
     
     App->>Gateway: generate(prompt, model)
@@ -312,10 +316,10 @@ sequenceDiagram
     alt Validation Success
         Gateway->>Codec: preprocess_input(prompt)
         Codec-->>Gateway: Processed Input
-        Gateway->>Provider: generate(prompt)
-        Provider->>API: make_request()
-        API-->>Provider: Response
-        Provider-->>Gateway: AI Response
+        Gateway->>LiteLLM: completion(model, messages)
+        LiteLLM->>AI_API: Unified API Request
+        AI_API-->>LiteLLM: Provider Response
+        LiteLLM-->>Gateway: Unified Response
         Gateway->>Codec: postprocess_output(response)
         Codec-->>Gateway: Processed Output
         Gateway-->>App: Final Response
@@ -325,14 +329,15 @@ sequenceDiagram
     end
 ```
 
-### 3. Database Operation Workflow
+### 3. PostgreSQL Database Operation Workflow
 
 ```mermaid
 sequenceDiagram
     participant App as Application
-    participant DB as Database Module
+    participant DB as PostgreSQL Module
     participant Validator as Validators
-    participant Conn as Database Connection
+    participant Pool as Connection Pool<br/>(psycopg2)
+    participant PG as PostgreSQL Server
     participant Event as Event Handler
     
     App->>DB: execute_query(query, params)
@@ -341,8 +346,11 @@ sequenceDiagram
     alt Validation Success
         DB->>DB: check_connection()
         alt Connected
-            DB->>Conn: execute(query, params)
-            Conn-->>DB: Query Results
+            DB->>Pool: get_connection()
+            Pool-->>DB: Connection
+            DB->>PG: execute(query, params)
+            PG-->>DB: Query Results
+            DB->>Pool: return_connection()
             DB->>Event: emit("query_success")
             DB-->>App: Results
         else Not Connected
@@ -412,19 +420,26 @@ sequenceDiagram
 └───────────────────────────────────────────────────────────┘
 ```
 
-### Agent Module Architecture
+### Agent Module Architecture (Agno Framework)
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    Agent Module                             │
+│                    Agent Module (Agno)                      │
 ├─────────────────────────────────────────────────────────────┤
 │                                                             │
 │  ┌─────────────────────────────────────────────────────┐  │
 │  │              Agent Class                            │  │
 │  │  - Lifecycle Management (start, stop)              │  │
-│  │  - Task Execution                                   │  │
+│  │  - Task Execution via Agno                        │  │
 │  │  - Event Handling                                    │  │
 │  │  - Status Management                                 │  │
+│  └──────────────┬──────────────────────────────────────┘  │
+│                 │                                          │
+│  ┌──────────────▼──────────────────────────────────────┐  │
+│  │        Agno Framework Integration                   │  │
+│  │  - AgnoAgent (from agno package)                   │  │
+│  │  - LLM Integration                                  │  │
+│  │  - Intelligent Task Processing                     │  │
 │  └──────────────┬──────────────────────────────────────┘  │
 │                 │                                          │
 │  ┌──────────────▼──────────────────────────────────────┐  │
@@ -437,8 +452,8 @@ sequenceDiagram
 │                 ├──────────────┐                          │
 │                 │              │                          │
 │  ┌──────────────▼──┐  ┌────────▼──────────┐              │
-│  │  Event Emitter  │  │  API Module       │              │
-│  │  (from Core)    │  │  (for external)   │              │
+│  │  Event Emitter  │  │  LiteLLM Gateway  │              │
+│  │  (from Core)    │  │  (for AI tasks)   │              │
 │  └─────────────────┘  └──────────────────┘              │
 │                                                           │
 └───────────────────────────────────────────────────────────┘
@@ -460,9 +475,9 @@ sequenceDiagram
 │                 │                                          │
 │  ┌──────────────▼──────────────────────────────────────┐  │
 │  │        Model Integration Factory                    │  │
-│  │  - OpenAIProvider                                   │  │
-│  │  - AnthropicProvider                                │  │
-│  │  - Custom Providers                                 │  │
+│  │  - LiteLLMProvider                                  │  │
+│  │  (Unified interface for OpenAI, Anthropic,          │  │
+│  │   Gemini, and other providers)                     │  │
 │  └──────────────┬──────────────────────────────────────┘  │
 │                 │                                          │
 │  ┌──────────────▼──────────────────────────────────────┐  │
@@ -1126,10 +1141,11 @@ graph TB
         ┌───────────────┼───────────────┐
         │               │               │
 ┌───────▼──────┐ ┌──────▼──────┐ ┌──────▼──────┐
-│ AI Providers │ │  Databases  │ │ External    │
-│ (OpenAI,     │ │ (PostgreSQL,│ │ APIs        │
-│  Anthropic)  │ │  MongoDB,   │ │             │
-│              │ │  Vector DBs)│ │             │
+│   LiteLLM    │ │ PostgreSQL  │ │ External    │
+│ (AI Gateway) │ │  Database   │ │ APIs        │
+│ OpenAI,      │ │             │ │             │
+│ Anthropic,   │ │             │ │             │
+│ Gemini, etc. │ │             │ │             │
 └──────────────┘ └─────────────┘ └─────────────┘
                         │
         ┌───────────────┼───────────────┐

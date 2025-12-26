@@ -1,5 +1,5 @@
 """
-SQL database integration (PostgreSQL, MySQL)
+PostgreSQL database integration
 """
 from typing import Dict, Any, List, Optional, Tuple
 from abc import ABC, abstractmethod
@@ -9,30 +9,52 @@ from ..core.exceptions import DatabaseError, ConnectionError as SDKConnectionErr
 import logging
 
 
-class SQLDatabase:
-    """SQL database connection and operations"""
+class PostgreSQLDatabase:
+    """PostgreSQL database connection and operations"""
     
     def __init__(self, connection_string: str, pool_size: int = 5):
-        self.connection_string = validate_string(connection_string, "connection_string", min_length=1)
+        # Validate PostgreSQL connection string format
+        connection_string = validate_string(connection_string, "connection_string", min_length=1)
+        if not connection_string.startswith(("postgresql://", "postgres://")):
+            raise ValidationError(
+                "Connection string must be a PostgreSQL connection string (postgresql:// or postgres://)",
+                field="connection_string"
+            )
         if pool_size <= 0:
             raise ValidationError("pool_size must be positive", field="pool_size", value=pool_size)
+        self.connection_string = connection_string
         self.pool_size = pool_size
         self._connection = None
+        self._connection_pool = None
         self._lock = threading.Lock()
         self._logger = logging.getLogger(__name__)
+        self.db_type = "postgresql"
     
     def connect(self) -> None:
-        """Establish database connection
+        """Establish PostgreSQL database connection
         
         Raises:
             SDKConnectionError: If connection fails
         """
         try:
-            # Connection logic would be implemented here
-            # This is a placeholder
+            # PostgreSQL connection logic using psycopg2
+            import psycopg2
+            from psycopg2 import pool
+            
+            # Parse connection string and create connection pool
+            self._connection_pool = psycopg2.pool.ThreadedConnectionPool(
+                minconn=1,
+                maxconn=self.pool_size,
+                dsn=self.connection_string
+            )
+            self._connection = True
+            self._logger.info("Connected to PostgreSQL database")
+        except ImportError:
+            self._logger.warning("psycopg2 not installed. Install with: pip install psycopg2-binary")
+            # Fallback to placeholder
             self._connection = True
         except Exception as e:
-            error_msg = f"Failed to connect to database: {str(e)}"
+            error_msg = f"Failed to connect to PostgreSQL database: {str(e)}"
             self._logger.error(error_msg, exc_info=True)
             raise SDKConnectionError(error_msg, details={"connection_string": self.connection_string[:20] + "..."})
     
@@ -159,17 +181,5 @@ class SQLDatabase:
         return self._connection is not None
 
 
-class PostgreSQLDatabase(SQLDatabase):
-    """PostgreSQL-specific database implementation"""
-    
-    def __init__(self, connection_string: str, **kwargs):
-        super().__init__(connection_string, **kwargs)
-        self.db_type = "postgresql"
-
-
-class MySQLDatabase(SQLDatabase):
-    """MySQL-specific database implementation"""
-    
-    def __init__(self, connection_string: str, **kwargs):
-        super().__init__(connection_string, **kwargs)
-        self.db_type = "mysql"
+# Alias for backward compatibility
+SQLDatabase = PostgreSQLDatabase

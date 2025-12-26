@@ -1,48 +1,56 @@
 # Database Integration Module
 
 ## WHY
-The database module provides unified interfaces for interacting with different types of databases (SQL, NoSQL, and vector databases). This allows your application to work with various data storage solutions without being tightly coupled to a specific database technology.
+The database module provides PostgreSQL database integration with optimized connection pooling, transaction handling, and query execution. PostgreSQL is the primary database for the SDK, providing robust relational data storage with advanced features like JSON support, full-text search, and extensibility.
 
 ## WHAT
 This module contains:
 
-- **sql_db.py**: SQL database integration for relational databases like PostgreSQL, MySQL, and SQLite. Provides connection management, query execution, and transaction handling
-- **no_sql_db.py**: NoSQL database integration for document and key-value stores like MongoDB, Cassandra, and Redis. Handles document operations, collections, and schema-less data management
-- **vector_db.py**: Vector database integration for similarity search and embeddings storage. Supports FAISS, Pinecone, Weaviate, and other vector databases for AI/ML applications
+- **sql_db.py**: PostgreSQL database integration with connection pooling, query execution, and transaction handling. Optimized for production use with psycopg2.
+- **no_sql_db.py**: NoSQL database integration (optional) for document and key-value stores like MongoDB, Cassandra, and Redis
+- **vector_db.py**: Vector database integration (optional) for similarity search and embeddings storage
 
 ## HOW
-Use database integrations in your application:
+Use PostgreSQL database in your application:
 
 ```python
-from src.database.sql_db import SQLDatabase
-from src.database.no_sql_db import NoSQLDatabase
-from src.database.vector_db import VectorDatabase
+from src.database.sql_db import PostgreSQLDatabase
 
-# SQL Database
-sql_db = SQLDatabase(connection_string="postgresql://...")
-results = sql_db.execute_query("SELECT * FROM users WHERE id = %s", (user_id,))
+# Connect to PostgreSQL
+db = PostgreSQLDatabase(connection_string="postgresql://user:pass@localhost/dbname")
+db.connect()
 
-# NoSQL Database
-nosql_db = NoSQLDatabase(connection_string="mongodb://...")
-document = nosql_db.find_one("users", {"id": user_id})
+# Execute queries
+results = db.execute_query("SELECT * FROM users WHERE id = %s", (user_id,))
 
-# Vector Database
-vector_db = VectorDatabase(provider="pinecone", api_key="...")
-vector_db.upsert(vectors=[...], ids=[...])
-similar = vector_db.search(query_vector, top_k=10)
+# Execute updates
+db.execute_update("INSERT INTO users (name, email) VALUES (%s, %s)", ("John", "john@example.com"))
+
+# Transactions
+db.execute_transaction([
+    ("INSERT INTO users (name) VALUES (%s)", ("Alice",)),
+    ("UPDATE users SET status = %s WHERE name = %s", ("active", "Alice"))
+])
+
+# Create tables
+db.create_table("users", {
+    "id": "SERIAL PRIMARY KEY",
+    "name": "VARCHAR(100) NOT NULL",
+    "email": "VARCHAR(255) UNIQUE"
+})
 ```
 
-Each database type provides a consistent interface while handling provider-specific optimizations and features.
+PostgreSQL provides a robust, production-ready database solution with advanced features and excellent performance.
 
 ## Input Validation and Error Handling
 
 **All public methods in the database module include comprehensive input validation:**
 
-- **SQLDatabase.__init__()**: Validates `connection_string` (string, non-empty) and `pool_size` (positive integer)
-- **SQLDatabase.execute_query()**: Validates `query` (string, 1-10000 chars) and `params` (tuple if provided)
-- **SQLDatabase.execute_update()**: Validates `query` (string, 1-10000 chars) and `params` (tuple if provided)
-- **SQLDatabase.execute_transaction()**: Validates `queries` (list, non-empty, each item is a tuple)
-- **SQLDatabase.create_table()**: Validates `table_name` (string, 1-100 chars) and `schema` (dict, non-empty)
+- **PostgreSQLDatabase.__init__()**: Validates `connection_string` (string, non-empty, must start with "postgresql://" or "postgres://") and `pool_size` (positive integer)
+- **PostgreSQLDatabase.execute_query()**: Validates `query` (string, 1-10000 chars) and `params` (tuple if provided)
+- **PostgreSQLDatabase.execute_update()**: Validates `query` (string, 1-10000 chars) and `params` (tuple if provided)
+- **PostgreSQLDatabase.execute_transaction()**: Validates `queries` (list, non-empty, each item is a tuple)
+- **PostgreSQLDatabase.create_table()**: Validates `table_name` (string, 1-100 chars) and `schema` (dict, non-empty)
 - **NoSQLDatabase.__init__()**: Validates `connection_string` (string, non-empty) and `database_name` (string, 1-100 chars)
 - **NoSQLDatabase.insert_one()**: Validates `collection` (string, 1-100 chars) and `document` (dict)
 - **NoSQLDatabase.insert_many()**: Validates `collection` (string, 1-100 chars) and `documents` (list, non-empty)
@@ -67,21 +75,21 @@ This module uses the following Python standard libraries and packages:
 - **typing**: Type hints (Dict, Any, List, Optional, Tuple)
 - **abc**: Abstract base classes (ABC, abstractmethod) for defining database interfaces
 - **threading**: Thread synchronization primitives (Lock) for thread-safe database operations
+- **psycopg2-binary**: PostgreSQL database adapter for Python (connection pooling, transactions)
 
 ## Functions and Classes
 
 ### sql_db.py
-- **SQLDatabase** (class): SQL database connection and operations
-  - `__init__()`: Initialize database with connection_string and pool_size
-  - `connect()`: Establish database connection
-  - `disconnect()`: Close database connection
-  - `execute_query()`: Execute a SELECT query
+- **PostgreSQLDatabase** (class): PostgreSQL database connection and operations (primary database)
+  - `__init__()`: Initialize PostgreSQL database with connection_string and pool_size
+  - `connect()`: Establish PostgreSQL connection with connection pooling (psycopg2)
+  - `disconnect()`: Close database connection and connection pool
+  - `execute_query()`: Execute a SELECT query with parameterized queries
   - `execute_update()`: Execute an INSERT/UPDATE/DELETE query
-  - `execute_transaction()`: Execute multiple queries in a transaction
-  - `create_table()`: Create a table with the given schema
+  - `execute_transaction()`: Execute multiple queries in a PostgreSQL transaction
+  - `create_table()`: Create a PostgreSQL table with the given schema
   - `is_connected` (property): Check if connected to database
-- **PostgreSQLDatabase** (class): PostgreSQL-specific database implementation
-- **MySQLDatabase** (class): MySQL-specific database implementation
+- **SQLDatabase** (alias): Alias for PostgreSQLDatabase for backward compatibility
 
 ### no_sql_db.py
 - **NoSQLDatabase** (class): Base NoSQL database connection and operations

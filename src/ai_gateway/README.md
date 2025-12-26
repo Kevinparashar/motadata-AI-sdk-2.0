@@ -8,7 +8,7 @@ This module contains:
 
 - **gateway.py**: Main gateway interface that provides a unified API for interacting with AI models, handling requests, and managing connections
 - **input_output.py**: Data preprocessing and post-processing utilities for transforming input data into model-compatible formats and processing model outputs
-- **model_integration.py**: Integration logic for different AI models and providers (OpenAI, Anthropic, local models, etc.), handling provider-specific configurations and API calls
+- **model_integration.py**: Integration logic with LiteLLM for unified access to multiple AI models and providers (OpenAI, Anthropic, Gemini, etc.), handling provider-specific configurations and API calls
 - **prompt_manager.py**: Prompt management system for handling prompt templates, fine-tuning configurations, and dynamic prompt generation
 
 ## HOW
@@ -19,8 +19,10 @@ from src.ai_gateway.gateway import AIGateway
 from src.ai_gateway.model_integration import ModelProvider
 from src.ai_gateway.prompt_manager import PromptManager
 
-# Initialize the gateway
-gateway = AIGateway(provider=ModelProvider.OPENAI, api_key="your-key")
+# Initialize the gateway with LiteLLM
+gateway = AIGateway(provider="litellm", api_key="your-key")
+model_integration = ModelIntegrationFactory.create("litellm", api_key="your-key")
+gateway.set_model_integration(model_integration)
 
 # Use prompt manager
 prompt_mgr = PromptManager()
@@ -45,8 +47,8 @@ The gateway handles authentication, rate limiting, error handling, and response 
 - **AIGateway.generate()**: Validates `prompt` (string, 1-100000 chars) and `model` (string, 1-100 chars if provided)
 - **AIGateway.chat()**: Validates `messages` (list, non-empty, each message must have "role" and "content" keys) and `model` (string if provided)
 - **AIGateway.embed()**: Validates `text` (string, 1-100000 chars) and `model` (string if provided)
-- **OpenAIProvider/AnthropicProvider.__init__()**: Validates `api_key` (string, non-empty) and `base_url` (string if provided)
-- **ModelIntegrationFactory.create()**: Validates `provider` (string, must be "openai" or "anthropic") and `api_key` (string, non-empty)
+- **LiteLLMProvider.__init__()**: Validates `api_key` (string if provided) and `api_base` (string if provided)
+- **ModelIntegrationFactory.create()**: Validates `provider` (string, must be "litellm") and `api_key` (string if provided)
 - **PromptTemplate.__init__()**: Validates `name` (string, 1-100 chars), `template` (string, non-empty), and `variables` (list)
 - **PromptManager.get_template()**: Validates `name` (string, non-empty)
 - **PromptManager.register_template()**: Validates template is a PromptTemplate instance
@@ -71,6 +73,7 @@ This module uses the following Python standard libraries and packages:
 - **abc**: Abstract base classes (ABC, abstractmethod) for defining interfaces
 - **json**: JSON encoding and decoding for data serialization
 - **pathlib**: Object-oriented filesystem paths for template file management
+- **litellm**: Unified interface for multiple AI providers (OpenAI, Anthropic, Gemini, etc.)
 - **src.core.data_structures**: RequestModel and ResponseModel from core module
 
 ## Functions and Classes
@@ -96,20 +99,14 @@ This module uses the following Python standard libraries and packages:
 - **format_messages()**: Format messages for chat API with optional system prompt
 
 ### model_integration.py
-- **OpenAIProvider** (class): OpenAI model provider integration
-  - `__init__()`: Initialize OpenAI provider with api_key and base_url
-  - `generate()`: Generate response using OpenAI
-  - `chat()`: Chat with OpenAI model
-  - `embed()`: Generate embeddings using OpenAI
-  - `get_available_models()`: Get available OpenAI models
-- **AnthropicProvider** (class): Anthropic (Claude) model provider integration
-  - `__init__()`: Initialize Anthropic provider with api_key
-  - `generate()`: Generate response using Anthropic
-  - `chat()`: Chat with Anthropic model
-  - `embed()`: Generate embeddings using Anthropic
-  - `get_available_models()`: Get available Anthropic models
-- **ModelIntegrationFactory** (class): Factory for creating model integrations
-  - `create()`: Static method to create a model provider instance
+- **LiteLLMProvider** (class): LiteLLM provider integration - unified interface for multiple AI models
+  - `__init__()`: Initialize LiteLLM provider with optional api_key and api_base
+  - `generate()`: Generate response using LiteLLM (supports OpenAI, Anthropic, Gemini, etc.)
+  - `chat()`: Chat with AI model using LiteLLM
+  - `embed()`: Generate embeddings using LiteLLM
+  - `get_available_models()`: Get available models from LiteLLM
+- **ModelIntegrationFactory** (class): Factory for creating LiteLLM model integrations
+  - `create()`: Static method to create a LiteLLM provider instance
 
 ### prompt_manager.py
 - **PromptTemplate** (class): Prompt template class
