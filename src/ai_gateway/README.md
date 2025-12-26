@@ -36,6 +36,34 @@ result = postprocess_output(response)
 
 The gateway handles authentication, rate limiting, error handling, and response formatting automatically.
 
+## Input Validation and Error Handling
+
+**All public methods in the AI Gateway module include comprehensive input validation:**
+
+- **AIGateway.__init__()**: Validates `provider` (string, 1-50 chars), `api_key` (string, non-empty if provided), and `config` (dict)
+- **AIGateway.set_model_integration()**: Validates integration object is not None
+- **AIGateway.generate()**: Validates `prompt` (string, 1-100000 chars) and `model` (string, 1-100 chars if provided)
+- **AIGateway.chat()**: Validates `messages` (list, non-empty, each message must have "role" and "content" keys) and `model` (string if provided)
+- **AIGateway.embed()**: Validates `text` (string, 1-100000 chars) and `model` (string if provided)
+- **OpenAIProvider/AnthropicProvider.__init__()**: Validates `api_key` (string, non-empty) and `base_url` (string if provided)
+- **ModelIntegrationFactory.create()**: Validates `provider` (string, must be "openai" or "anthropic") and `api_key` (string, non-empty)
+- **PromptTemplate.__init__()**: Validates `name` (string, 1-100 chars), `template` (string, non-empty), and `variables` (list)
+- **PromptManager.get_template()**: Validates `name` (string, non-empty)
+- **PromptManager.register_template()**: Validates template is a PromptTemplate instance
+- **PromptManager.load_templates_from_file()**: Validates `file_path` (string) and file format (must be JSON array)
+- **preprocess_input()**: Validates `format` (must be "json" or "text")
+- **normalize_text()**: Validates `text` (string, allows empty)
+- **chunk_text()**: Validates `text` (string, non-empty), `chunk_size` (positive), `overlap` (non-negative, less than chunk_size)
+- **format_messages()**: Validates `messages` (list, non-empty, each with "role" and "content"), and `system_prompt` (string if provided)
+
+**Custom Exceptions Used:**
+- `ValidationError`: Invalid input parameters (replaces `ValueError`, `TypeError`)
+- `ModelError`: AI model operation failures (replaces generic exceptions)
+- `ConfigurationError`: Configuration and file loading errors (replaces `FileNotFoundError`, `ValueError`)
+- `ConnectionError`: Connection failures (replaces built-in `ConnectionError`)
+
+All methods raise appropriate custom exceptions with detailed error messages and context information for debugging.
+
 ## Libraries
 This module uses the following Python standard libraries and packages:
 

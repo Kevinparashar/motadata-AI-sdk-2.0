@@ -353,17 +353,29 @@ The SDK is organized into modules, each containing specific functions and classe
 - `EventType` - Event type enumeration
 
 **Exceptions:**
-- `SDKError` - Base exception for all SDK errors
-- `ValidationError` - Input validation errors
-- `APIError` - API request errors
+- `SDKError` - Base exception for all SDK errors (replaces generic `Exception`)
+- `ValidationError` - Input validation errors (replaces `ValueError`, `TypeError`)
+- `APIError` - API request errors with status codes and response data
 - `DatabaseError` - Database operation errors
 - `AuthenticationError` - Authentication failures
-- And more custom exceptions
+- `ConnectionError` - Connection failures (replaces built-in `ConnectionError`)
+- `ConfigurationError` - Configuration errors (replaces `FileNotFoundError`, `ValueError` for config)
+- `CodecError` - Encoding/decoding errors
+- `AgentError` - Agent operation errors
+- `ModelError` - AI model operation errors
+- All exceptions include detailed error messages and optional `details` dictionary for debugging
 
 **Validators:**
-- `validate_string()` - Validate and sanitize string input
-- `validate_dict()` - Validate dictionary input
-- `validate_list()` - Validate list input
+- `validate_string()` - Validate and sanitize string input with length constraints
+- `validate_dict()` - Validate dictionary input with required keys checking
+- `validate_list()` - Validate list input with item count constraints
+- `validate_int()` - Validate integer input with range checking
+- `validate_bool()` - Validate boolean input
+- `validate_url()` - Validate URL format
+- `validate_email()` - Validate email format
+- `validate_uuid()` - Validate UUID format
+
+**Note:** All public methods across the SDK now include comprehensive input validation using these validators, ensuring type safety and preventing invalid data from causing runtime errors.
 
 **Utilities:**
 - `setup_logger()` - Setup and configure a logger
@@ -462,6 +474,22 @@ Comprehensive unit tests for all SDK components:
 - `requirements-test.txt` - Test-specific dependencies
 
 **📖 For detailed API documentation**, refer to the README.md files in each module directory.
+
+## Input Validation and Error Handling
+
+**Comprehensive Input Validation:** All public methods across the SDK now include input validation to ensure:
+- Type safety (correct data types for all parameters)
+- Range checking (string lengths, list sizes, numeric ranges)
+- Required fields (dictionary keys, list items)
+- Format validation (URLs, emails, UUIDs)
+
+**Custom Exception Hierarchy:** The SDK uses a custom exception hierarchy instead of built-in Python exceptions:
+- All exceptions inherit from `SDKError` for consistent error handling
+- Specific exception types for different error categories (ValidationError, APIError, DatabaseError, etc.)
+- Detailed error messages with optional `details` dictionary for debugging
+- Better error context (field names, values, status codes, etc.)
+
+This ensures better error handling, easier debugging, and more predictable behavior throughout the SDK.
 
 ## Project Configuration
 

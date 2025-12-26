@@ -34,6 +34,33 @@ similar = vector_db.search(query_vector, top_k=10)
 
 Each database type provides a consistent interface while handling provider-specific optimizations and features.
 
+## Input Validation and Error Handling
+
+**All public methods in the database module include comprehensive input validation:**
+
+- **SQLDatabase.__init__()**: Validates `connection_string` (string, non-empty) and `pool_size` (positive integer)
+- **SQLDatabase.execute_query()**: Validates `query` (string, 1-10000 chars) and `params` (tuple if provided)
+- **SQLDatabase.execute_update()**: Validates `query` (string, 1-10000 chars) and `params` (tuple if provided)
+- **SQLDatabase.execute_transaction()**: Validates `queries` (list, non-empty, each item is a tuple)
+- **SQLDatabase.create_table()**: Validates `table_name` (string, 1-100 chars) and `schema` (dict, non-empty)
+- **NoSQLDatabase.__init__()**: Validates `connection_string` (string, non-empty) and `database_name` (string, 1-100 chars)
+- **NoSQLDatabase.insert_one()**: Validates `collection` (string, 1-100 chars) and `document` (dict)
+- **NoSQLDatabase.insert_many()**: Validates `collection` (string, 1-100 chars) and `documents` (list, non-empty)
+- **NoSQLDatabase.find_one/find_many()**: Validates `collection` (string, 1-100 chars) and `filter` (dict if provided)
+- **NoSQLDatabase.update_one()**: Validates `collection` (string, 1-100 chars), `filter` (dict), and `update` (dict)
+- **NoSQLDatabase.delete_one()**: Validates `collection` (string, 1-100 chars) and `filter` (dict)
+- **VectorDatabase.__init__()**: Validates `provider` (string, 1-50 chars) and `api_key` (string if provided)
+- **VectorDatabase.upsert()**: Validates `vectors` (list, non-empty), `ids` (list, non-empty, same length as vectors), and `metadata` (list if provided)
+- **VectorDatabase.search()**: Validates `query_vector` (list, non-empty), `top_k` (positive integer), and `filter` (dict if provided)
+- **VectorDatabase.delete()**: Validates `ids` (list, non-empty)
+
+**Custom Exceptions Used:**
+- `ValidationError`: Invalid input parameters (replaces `ValueError`, `TypeError`)
+- `DatabaseError`: Database operation failures (replaces generic exceptions)
+- `ConnectionError`: Connection failures (replaces built-in `ConnectionError`)
+
+All methods raise appropriate custom exceptions with detailed error messages and context information for debugging.
+
 ## Libraries
 This module uses the following Python standard libraries and packages:
 

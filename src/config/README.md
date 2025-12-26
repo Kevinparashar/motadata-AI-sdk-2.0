@@ -33,6 +33,19 @@ logger.info("SDK initialized")
 
 Configuration can be loaded from YAML files, JSON files, environment variables, or passed programmatically. The logging system integrates seamlessly with Python's standard logging module.
 
+## Input Validation and Error Handling
+
+**All public methods in the config module include comprehensive input validation:**
+
+- **Settings.from_file()**: Validates `file_path` (string, non-empty), checks file exists, validates JSON format (must be object), and handles JSON decode errors
+- **Settings.save_to_file()**: Validates `file_path` (string, non-empty) and file format (must be .json)
+
+**Custom Exceptions Used:**
+- `ValidationError`: Invalid input parameters (replaces `ValueError`, `TypeError`)
+- `ConfigurationError`: Configuration and file loading errors (replaces `FileNotFoundError`, `ValueError`, `json.JSONDecodeError`)
+
+All methods raise appropriate custom exceptions with detailed error messages and context information for debugging.
+
 ## Libraries
 This module uses the following Python standard libraries and packages:
 

@@ -32,6 +32,24 @@ codec = get_codec("my_format")
 
 Codecs are particularly useful when working with custom protocols, binary formats, or when you need to transform data for specific communication channels.
 
+## Input Validation and Error Handling
+
+**All public methods in the codecs module include comprehensive input validation:**
+
+- **CustomCodec.__init__()**: Validates `format` (string, 1-50 chars, must be "json", "base64", or "binary")
+- **register_codec()**: Validates `name` (string, 1-50 chars) and `codec_class` (must be a Codec subclass)
+- **get_codec()**: Validates `name` (string, non-empty, must exist in registry)
+- **encode_with_format()**: Validates `format` (string, must exist in registry)
+- **decode_with_format()**: Validates `format` (string, must exist in registry)
+- **JSONCodec.encode()**: Validates data can be JSON serialized
+- **JSONCodec.decode()**: Validates data can be JSON deserialized
+
+**Custom Exceptions Used:**
+- `ValidationError`: Invalid input parameters (replaces `ValueError`, `TypeError`)
+- `CodecError`: Encoding/decoding failures (replaces `json.JSONDecodeError`, `UnicodeDecodeError`, and generic exceptions)
+
+All methods raise appropriate custom exceptions with detailed error messages and context information for debugging.
+
 ## Libraries
 This module uses the following Python standard libraries and packages:
 

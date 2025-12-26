@@ -6,6 +6,9 @@ import os
 import json
 from pathlib import Path
 from ..core.utils import get_env_var, validate_config
+from ..core.validators import validate_string, validate_dict
+from ..core.exceptions import ConfigurationError, ValidationError
+import logging
 
 
 class Settings:
@@ -65,19 +68,41 @@ class Settings:
     
     @classmethod
     def from_file(cls, file_path: str) -> 'Settings':
-        """Load settings from a JSON or YAML file"""
+        """Load settings from a JSON or YAML file
+        
+        Args:
+            file_path: Path to configuration file
+        
+        Returns:
+            Settings instance
+        
+        Raises:
+            ValidationError: If file_path is invalid
+            ConfigurationError: If file not found or format unsupported
+        """
+        file_path = validate_string(file_path, "file_path", min_length=1)
         path = Path(file_path)
         if not path.exists():
-            raise FileNotFoundError(f"Config file not found: {file_path}")
+            raise ConfigurationError(f"Config file not found: {file_path}")
         
-        with open(path, 'r') as f:
-            if path.suffix == '.json':
-                config = json.load(f)
-            else:
-                # YAML loading would go here if yaml library is available
-                raise ValueError(f"Unsupported config file format: {path.suffix}")
-        
-        return cls(config=config)
+        try:
+            with open(path, 'r') as f:
+                if path.suffix == '.json':
+                    config = json.load(f)
+                    if not isinstance(config, dict):
+                        raise ConfigurationError("Config file must contain a JSON object")
+                else:
+                    # YAML loading would go here if yaml library is available
+                    raise ConfigurationError(
+                        f"Unsupported config file format: {path.suffix}",
+                        details={"supported_formats": [".json"]}
+                    )
+            
+            return cls(config=config)
+        except json.JSONDecodeError as e:
+            raise ConfigurationError(f"Invalid JSON in config file: {str(e)}", details={"file": file_path})
+        except Exception as e:
+            raise ConfigurationError(f"Failed to load config file: {str(e)}", details={"file": file_path})
     
     @classmethod
     def from_env(cls) -> 'Settings':
@@ -85,13 +110,28 @@ class Settings:
         return cls()
     
     def save_to_file(self, file_path: str) -> None:
-        """Save settings to a file"""
+        """Save settings to a file
+        
+        Args:
+            file_path: Path to save configuration file
+        
+        Raises:
+            ValidationError: If file_path is invalid
+            ConfigurationError: If file format is unsupported or save fails
+        """
+        file_path = validate_string(file_path, "file_path", min_length=1)
         path = Path(file_path)
-        with open(path, 'w') as f:
-            if path.suffix == '.json':
-                json.dump(self._config, f, indent=2)
-            else:
-                raise ValueError(f"Unsupported config file format: {path.suffix}")
+        try:
+            with open(path, 'w') as f:
+                if path.suffix == '.json':
+                    json.dump(self._config, f, indent=2)
+                else:
+                    raise ConfigurationError(
+                        f"Unsupported config file format: {path.suffix}",
+                        details={"supported_formats": [".json"]}
+                    )
+        except Exception as e:
+            raise ConfigurationError(f"Failed to save config file: {str(e)}", details={"file": file_path})
 
 
 def load_config(file_path: Optional[str] = None) -> Settings:

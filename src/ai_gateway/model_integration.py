@@ -4,15 +4,22 @@ Integration with different AI models
 from typing import Dict, Any, List, Optional
 from abc import ABC, abstractmethod
 from .gateway import ModelProvider
+from ..core.validators import validate_string, validate_list, validate_dict
+from ..core.exceptions import ModelError, ValidationError, ConfigurationError
+import logging
 
 
 class OpenAIProvider(ModelProvider):
     """OpenAI model provider integration"""
     
     def __init__(self, api_key: str, base_url: Optional[str] = None):
-        self.api_key = api_key
-        self.base_url = base_url or "https://api.openai.com/v1"
+        self.api_key = validate_string(api_key, "api_key", min_length=1)
+        if base_url is not None:
+            self.base_url = validate_string(base_url, "base_url", min_length=1)
+        else:
+            self.base_url = "https://api.openai.com/v1"
         self._models = ["gpt-4", "gpt-3.5-turbo", "text-davinci-003"]
+        self._logger = logging.getLogger(__name__)
     
     def generate(self, prompt: str, model: Optional[str] = None, **kwargs) -> Dict[str, Any]:
         """Generate a response using OpenAI"""
@@ -49,8 +56,9 @@ class AnthropicProvider(ModelProvider):
     """Anthropic (Claude) model provider integration"""
     
     def __init__(self, api_key: str):
-        self.api_key = api_key
+        self.api_key = validate_string(api_key, "api_key", min_length=1)
         self._models = ["claude-3-opus", "claude-3-sonnet", "claude-3-haiku"]
+        self._logger = logging.getLogger(__name__)
     
     def generate(self, prompt: str, model: Optional[str] = None, **kwargs) -> Dict[str, Any]:
         """Generate a response using Anthropic"""
@@ -84,13 +92,38 @@ class ModelIntegrationFactory:
     
     @staticmethod
     def create(provider: str, api_key: str, **kwargs) -> ModelProvider:
-        """Create a model provider instance"""
+        """Create a model provider instance
+        
+        Args:
+            provider: Provider name (openai, anthropic)
+            api_key: API key for the provider
+            **kwargs: Additional provider-specific arguments
+        
+        Returns:
+            ModelProvider instance
+        
+        Raises:
+            ValidationError: If provider or api_key is invalid
+            ConfigurationError: If provider is not supported
+        """
+        provider = validate_string(provider, "provider", min_length=1).lower()
+        api_key = validate_string(api_key, "api_key", min_length=1)
+        
         providers = {
             "openai": OpenAIProvider,
             "anthropic": AnthropicProvider,
         }
         
-        if provider.lower() not in providers:
-            raise ValueError(f"Unknown provider: {provider}")
+        if provider not in providers:
+            raise ConfigurationError(
+                f"Unknown provider: {provider}",
+                details={"provider": provider, "available": list(providers.keys())}
+            )
         
-        return providers[provider.lower()](api_key, **kwargs)
+        try:
+            return providers[provider](api_key, **kwargs)
+        except Exception as e:
+            raise ConfigurationError(
+                f"Failed to create {provider} provider: {str(e)}",
+                details={"provider": provider, "error": str(e)}
+            )

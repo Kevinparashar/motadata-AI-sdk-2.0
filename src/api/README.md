@@ -37,6 +37,29 @@ response = send_request("POST", "/endpoint", data=payload, auth=auth)
 
 The module handles authentication refresh, rate limiting, error retries, and response parsing automatically.
 
+## Input Validation and Error Handling
+
+**All public methods in the API module include comprehensive input validation:**
+
+- **APICommunicator.__init__()**: Validates `base_url` (string, non-empty), `timeout` (positive integer), and `headers` (dict)
+- **APICommunicator.set_auth()**: Validates `token` (string, non-empty)
+- **APICommunicator.get/post/put/delete()**: Validates `endpoint` (string) and optional `params`/`data`/`headers` (dict)
+- **WebSocketCommunicator.__init__()**: Validates `url` (string, non-empty)
+- **WebSocketCommunicator.send()**: Validates `message` (dict)
+- **OAuth2Authenticator.__init__()**: Validates `client_id`, `client_secret`, `token_url` (all strings, non-empty), and optional `scope`
+- **JWTAuthenticator.__init__()**: Validates `secret_key` (string, non-empty) and `algorithm` (string, 1-20 chars)
+- **JWTAuthenticator.decode_token()**: Validates `token` (string, non-empty)
+- **APIKeyAuthenticator.__init__()**: Validates `api_key` (string, non-empty)
+- **send_request()**: Validates `method` (must be GET/POST/PUT/DELETE/PATCH), `url` (string), and `timeout` (positive)
+
+**Custom Exceptions Used:**
+- `ValidationError`: Invalid input parameters (replaces `ValueError`, `TypeError`)
+- `APIError`: API request failures with status codes and response data (replaces generic exceptions)
+- `AuthenticationError`: Authentication failures (replaces generic exceptions)
+- `ConnectionError`: Connection failures (replaces built-in `ConnectionError`)
+
+All methods raise appropriate custom exceptions with detailed error messages, status codes (for API errors), and context information.
+
 ## Libraries
 This module uses the following Python standard libraries and packages:
 

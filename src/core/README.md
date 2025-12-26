@@ -42,6 +42,30 @@ validated_string = validate_string(
 
 These components are typically used internally by other SDK modules, but can also be used directly in your application code when needed.
 
+## Input Validation and Error Handling
+
+**All public methods across the SDK now include comprehensive input validation** using the validators module. This ensures:
+
+- **Type Safety**: All inputs are validated for correct types before processing
+- **Range Checking**: String lengths, list sizes, and numeric ranges are validated
+- **Required Fields**: Required dictionary keys and list items are checked
+- **Custom Exceptions**: All validation failures raise `ValidationError` with detailed field and value information
+
+**Custom Exception Hierarchy**: The SDK uses a custom exception hierarchy instead of built-in Python exceptions:
+
+- **SDKError**: Base exception for all SDK errors (replaces generic `Exception`)
+- **ValidationError**: Input validation failures (replaces `ValueError`, `TypeError`)
+- **ConnectionError**: Connection failures (replaces built-in `ConnectionError`)
+- **ConfigurationError**: Configuration issues (replaces `FileNotFoundError`, `ValueError` for config)
+- **APIError**: API request failures (includes status codes and response data)
+- **DatabaseError**: Database operation failures
+- **CodecError**: Encoding/decoding failures
+- **AgentError**: Agent operation failures
+- **ModelError**: AI model operation failures
+- **AuthenticationError**: Authentication failures
+
+All exceptions include detailed error messages and optional `details` dictionary for debugging.
+
 ## Version Management
 The SDK version is managed in `src/__version__.py`:
 ```python
