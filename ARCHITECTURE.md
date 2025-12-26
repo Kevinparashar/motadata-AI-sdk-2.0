@@ -7,6 +7,7 @@
 - [Module Dependencies](#module-dependencies)
 - [Workflow Diagrams](#workflow-diagrams)
 - [Sequence Diagrams](#sequence-diagrams)
+- [Observability Architecture](#observability-architecture)
 - [Deployment Architecture](#deployment-architecture)
 
 ---
@@ -36,6 +37,16 @@
                             ┌───────▼───────┐
                             │    Config     │
                             │    Module     │
+                            │  (Settings,   │
+                            │   Logging,    │
+                            │ Observability)│
+                            └───────────────┘
+                                    │
+                            ┌───────▼───────┐
+                            │ Observability │
+                            │  (Metrics,    │
+                            │   Tracing,    │
+                            │  Monitoring)  │
                             └───────────────┘
 ```
 
@@ -66,6 +77,7 @@ graph TB
         API[API Module]
         CODEC[Codecs Module]
         CONFIG[Config Module]
+        OBS[Observability<br/>Metrics, Tracing,<br/>Health Checks]
     end
     
     subgraph "External Services"
@@ -73,6 +85,7 @@ graph TB
         DB_SERV[Databases<br/>PostgreSQL, MongoDB, Vector DBs]
         EXT_API[External APIs]
         MSG[Message Queue<br/>NATS]
+        MONITOR[Monitoring Tools<br/>Prometheus, Datadog,<br/>Jaeger]
     end
     
     APP --> AGENT
@@ -106,6 +119,17 @@ graph TB
     CONFIG --> CORE
     CONFIG --> UTILS
     
+    OBS --> CORE
+    OBS --> CONFIG
+    OBS --> EVENT
+    
+    AGENT --> OBS
+    AI --> OBS
+    DB --> OBS
+    API --> OBS
+    
+    OBS --> MONITOR
+    
     style CORE fill:#e1f5ff
     style VALID fill:#fff4e1
     style EXCEPT fill:#ffe1e1
@@ -113,6 +137,8 @@ graph TB
     style AI fill:#f0e1ff
     style DB fill:#ffe1f0
     style API fill:#e1ffff
+    style OBS fill:#ffe1ff
+    style MONITOR fill:#e1e1ff
 ```
 
 ---
@@ -147,6 +173,8 @@ flowchart LR
         RESPONSE[Response Model]
         EVENTS[Event Emission]
         LOGS[Logging]
+        METRICS[Metrics Collection]
+        TRACES[Distributed Traces]
     end
     
     USER --> VALIDATE
@@ -167,9 +195,12 @@ flowchart LR
     FORMAT --> RESPONSE
     RESPONSE --> EVENTS
     RESPONSE --> LOGS
+    RESPONSE --> METRICS
+    RESPONSE --> TRACES
     
     EXCEPT --> EVENTS
     EXCEPT --> LOGS
+    EXCEPT --> METRICS
 ```
 
 ---
@@ -714,6 +745,7 @@ graph LR
 | **Database** | Core, Config | Agents, Applications |
 | **AI Gateway** | Core, API, Codecs, Config | Agents, Applications |
 | **Agents** | Core, API, Config | Applications |
+| **Observability** | Core, Config, Event Handler | All Modules, Monitoring Tools |
 
 ---
 
@@ -721,7 +753,7 @@ graph LR
 
 ### 1. **Layered Architecture**
 - **Layer 1**: Core foundation (data structures, utilities, exceptions)
-- **Layer 2**: Base modules (config, codecs)
+- **Layer 2**: Base modules (config, codecs, observability)
 - **Layer 3**: Functional modules (agents, AI, database, API)
 - **Layer 4**: Application code
 
@@ -745,6 +777,321 @@ graph LR
 - Input validation on all public methods
 - Runtime type checking
 
+### 6. **Observability**
+- Comprehensive metrics collection (counters, gauges, histograms)
+- Distributed tracing across services
+- Performance monitoring (latency, throughput)
+- Health checks for system components
+- Integration with monitoring tools (Prometheus, Datadog, Jaeger)
+
+---
+
+## Observability Architecture
+
+### Observability Component Structure
+
+```mermaid
+graph TB
+    subgraph "Observability Module"
+        OBS_MAIN[Observability<br/>Main Class]
+        
+        subgraph "Metrics"
+            METRICS_REG[Metrics Registry]
+            COUNTER[Counter Metrics]
+            GAUGE[Gauge Metrics]
+            HISTOGRAM[Histogram Metrics]
+        end
+        
+        subgraph "Tracing"
+            TRACER[Tracer]
+            SPAN[Trace Span]
+            TRACE_ID[Trace IDs]
+        end
+        
+        subgraph "Performance"
+            PERF_MON[Performance Monitor]
+            LATENCY[Latency Tracking]
+            THROUGHPUT[Throughput Monitoring]
+        end
+        
+        subgraph "Health"
+            HEALTH_CHECKER[Health Checker]
+            HEALTH_CHECK[Health Check]
+            STATUS[Status Reporting]
+        end
+    end
+    
+    subgraph "SDK Modules"
+        AGENT_MOD[Agents]
+        AI_MOD[AI Gateway]
+        DB_MOD[Database]
+        API_MOD[API]
+    end
+    
+    subgraph "External Monitoring"
+        PROM[Prometheus]
+        DD[Datadog]
+        JAEGER[Jaeger]
+    end
+    
+    OBS_MAIN --> METRICS_REG
+    OBS_MAIN --> TRACER
+    OBS_MAIN --> PERF_MON
+    OBS_MAIN --> HEALTH_CHECKER
+    
+    METRICS_REG --> COUNTER
+    METRICS_REG --> GAUGE
+    METRICS_REG --> HISTOGRAM
+    
+    TRACER --> SPAN
+    TRACER --> TRACE_ID
+    
+    PERF_MON --> LATENCY
+    PERF_MON --> THROUGHPUT
+    
+    HEALTH_CHECKER --> HEALTH_CHECK
+    HEALTH_CHECKER --> STATUS
+    
+    AGENT_MOD --> OBS_MAIN
+    AI_MOD --> OBS_MAIN
+    DB_MOD --> OBS_MAIN
+    API_MOD --> OBS_MAIN
+    
+    OBS_MAIN --> PROM
+    OBS_MAIN --> DD
+    OBS_MAIN --> JAEGER
+    
+    style OBS_MAIN fill:#ffe1ff
+    style METRICS_REG fill:#e1ffe1
+    style TRACER fill:#e1f5ff
+    style PERF_MON fill:#fff4e1
+    style HEALTH_CHECKER fill:#ffe1e1
+```
+
+### Observability Data Flow
+
+```mermaid
+flowchart LR
+    subgraph "SDK Operations"
+        OP1[Agent Task]
+        OP2[AI Request]
+        OP3[DB Query]
+        OP4[API Call]
+    end
+    
+    subgraph "Observability Collection"
+        MET[Collect Metrics]
+        TRACE[Create Spans]
+        PERF[Measure Performance]
+        HEALTH[Run Health Checks]
+    end
+    
+    subgraph "Observability Storage"
+        MET_STORE[Metrics Registry]
+        TRACE_STORE[Trace Store]
+        PERF_STORE[Performance Data]
+        HEALTH_STORE[Health Status]
+    end
+    
+    subgraph "Export & Integration"
+        EXPORT[Export Data]
+        PROM_EXP[Prometheus Format]
+        DD_EXP[Datadog Format]
+        JAEGER_EXP[Jaeger Format]
+    end
+    
+    OP1 --> MET
+    OP1 --> TRACE
+    OP1 --> PERF
+    
+    OP2 --> MET
+    OP2 --> TRACE
+    OP2 --> PERF
+    
+    OP3 --> MET
+    OP3 --> TRACE
+    OP3 --> PERF
+    OP3 --> HEALTH
+    
+    OP4 --> MET
+    OP4 --> TRACE
+    OP4 --> PERF
+    OP4 --> HEALTH
+    
+    MET --> MET_STORE
+    TRACE --> TRACE_STORE
+    PERF --> PERF_STORE
+    HEALTH --> HEALTH_STORE
+    
+    MET_STORE --> EXPORT
+    TRACE_STORE --> EXPORT
+    PERF_STORE --> EXPORT
+    HEALTH_STORE --> EXPORT
+    
+    EXPORT --> PROM_EXP
+    EXPORT --> DD_EXP
+    EXPORT --> JAEGER_EXP
+```
+
+### Observability Integration Workflow
+
+```mermaid
+sequenceDiagram
+    participant App as Application
+    participant SDK as SDK Module
+    participant Obs as Observability
+    participant Metrics as Metrics Registry
+    participant Tracer as Tracer
+    participant Monitor as Performance Monitor
+    participant Health as Health Checker
+    participant Ext as External Tools
+    
+    App->>SDK: Execute Operation
+    SDK->>Obs: Start Monitoring
+    
+    Obs->>Tracer: Start Span
+    Obs->>Monitor: Start Measurement
+    Obs->>Metrics: Record Counter
+    
+    SDK->>SDK: Process Operation
+    
+    SDK->>Obs: End Monitoring
+    Obs->>Tracer: Finish Span
+    Obs->>Monitor: End Measurement
+    Obs->>Metrics: Update Metrics
+    
+    Obs->>Health: Check Health
+    Health-->>Obs: Health Status
+    
+    Obs->>Ext: Export Metrics
+    Obs->>Ext: Export Traces
+    Obs->>Ext: Export Performance Data
+    
+    Ext-->>App: Monitoring Dashboard
+```
+
+### Metrics Collection Flow
+
+```mermaid
+graph TD
+    START([Operation Starts])
+    START --> VALIDATE{Input<br/>Validation}
+    
+    VALIDATE -->|Pass| OP_START[Operation Start]
+    VALIDATE -->|Fail| METRIC_ERROR[Record Error Metric]
+    
+    OP_START --> METRIC_START[Record Start Metric]
+    METRIC_START --> TRACE_START[Start Trace Span]
+    TRACE_START --> PERF_START[Start Performance Timer]
+    
+    PERF_START --> EXECUTE[Execute Operation]
+    
+    EXECUTE -->|Success| METRIC_SUCCESS[Increment Success Counter]
+    EXECUTE -->|Error| METRIC_FAIL[Increment Error Counter]
+    
+    METRIC_SUCCESS --> PERF_END[End Performance Timer]
+    METRIC_FAIL --> PERF_END
+    
+    PERF_END --> HISTOGRAM[Record Latency Histogram]
+    HISTOGRAM --> TRACE_END[End Trace Span]
+    TRACE_END --> METRIC_END[Record End Metric]
+    
+    METRIC_ERROR --> END([End])
+    METRIC_END --> END
+    
+    style METRIC_ERROR fill:#FF6B6B
+    style METRIC_FAIL fill:#FF6B6B
+    style METRIC_SUCCESS fill:#90EE90
+```
+
+### Health Check Architecture
+
+```mermaid
+graph TB
+    subgraph "Health Check System"
+        HC_REGISTRY[Health Checker Registry]
+        
+        subgraph "Component Checks"
+            DB_CHECK[Database Health]
+            API_CHECK[API Health]
+            AI_CHECK[AI Gateway Health]
+            AGENT_CHECK[Agent Health]
+        end
+        
+        subgraph "System Checks"
+            MEM_CHECK[Memory Health]
+            CPU_CHECK[CPU Health]
+            DISK_CHECK[Disk Health]
+        end
+    end
+    
+    subgraph "Health Status"
+        STATUS_AGG[Aggregated Status]
+        DETAILS[Detailed Results]
+        TIMESTAMPS[Check Timestamps]
+    end
+    
+    subgraph "Integration"
+        API_ENDPOINT[Health API Endpoint]
+        MONITORING[Monitoring Tools]
+        ALERTS[Alert System]
+    end
+    
+    HC_REGISTRY --> DB_CHECK
+    HC_REGISTRY --> API_CHECK
+    HC_REGISTRY --> AI_CHECK
+    HC_REGISTRY --> AGENT_CHECK
+    HC_REGISTRY --> MEM_CHECK
+    HC_REGISTRY --> CPU_CHECK
+    HC_REGISTRY --> DISK_CHECK
+    
+    DB_CHECK --> STATUS_AGG
+    API_CHECK --> STATUS_AGG
+    AI_CHECK --> STATUS_AGG
+    AGENT_CHECK --> STATUS_AGG
+    MEM_CHECK --> STATUS_AGG
+    CPU_CHECK --> STATUS_AGG
+    DISK_CHECK --> STATUS_AGG
+    
+    STATUS_AGG --> DETAILS
+    STATUS_AGG --> TIMESTAMPS
+    
+    STATUS_AGG --> API_ENDPOINT
+    STATUS_AGG --> MONITORING
+    STATUS_AGG --> ALERTS
+```
+
+### Observability Integration Points
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│              SDK Module (Agent/AI/DB/API)                    │
+└───────────────────────┬─────────────────────────────────────┘
+                        │
+                        │ Observability Hooks
+                        │
+        ┌───────────────┼───────────────┐
+        │               │               │
+┌───────▼──────┐ ┌──────▼──────┐ ┌──────▼──────┐
+│   Metrics    │ │   Tracing   │ │ Performance │
+│  Collection  │ │   System    │ │  Monitoring │
+└───────┬──────┘ └──────┬──────┘ └──────┬──────┘
+        │               │               │
+        └───────────────┼───────────────┘
+                        │
+                ┌───────▼───────┐
+                │ Observability │
+                │   Main Class  │
+                └───────┬───────┘
+                        │
+        ┌───────────────┼───────────────┐
+        │               │               │
+┌───────▼──────┐ ┌──────▼──────┐ ┌──────▼──────┐
+│  Prometheus  │ │   Datadog   │ │   Jaeger    │
+│   Exporter   │ │   Adapter   │ │   Adapter   │
+└──────────────┘ └─────────────┘ └─────────────┘
+```
+
 ---
 
 ## Deployment Architecture
@@ -767,7 +1114,13 @@ graph LR
 │              ┌──────▼──────────────▼──────┐                │
 │              │      Core Module           │                │
 │              │  (Foundation & Utilities) │                │
-│              └────────────────────────────┘                │
+│              └──────────────┬─────────────┘                │
+│                             │                              │
+│              ┌──────────────▼──────────────┐              │
+│              │   Config & Observability    │              │
+│              │  (Settings, Logging,        │              │
+│              │   Metrics, Tracing)        │              │
+│              └─────────────────────────────┘              │
 └───────────────────────┬─────────────────────────────────────┘
                         │
         ┌───────────────┼───────────────┐
@@ -777,6 +1130,13 @@ graph LR
 │ (OpenAI,     │ │ (PostgreSQL,│ │ APIs        │
 │  Anthropic)  │ │  MongoDB,   │ │             │
 │              │ │  Vector DBs)│ │             │
+└──────────────┘ └─────────────┘ └─────────────┘
+                        │
+        ┌───────────────┼───────────────┐
+        │               │               │
+┌───────▼──────┐ ┌──────▼──────┐ ┌──────▼──────┐
+│ Prometheus   │ │   Datadog   │ │   Jaeger    │
+│ (Metrics)    │ │   (APM)     │ │  (Tracing)  │
 └──────────────┘ └─────────────┘ └─────────────┘
 ```
 
@@ -793,6 +1153,7 @@ This architecture visualization demonstrates:
 5. **Scalability**: Modular design allows easy extension and modification
 6. **Type Safety**: Validation ensures data integrity throughout the system
 7. **Event-Driven**: Asynchronous event handling for decoupled communication
+8. **Observability**: Comprehensive monitoring with metrics, tracing, performance tracking, and health checks
 
 The SDK is designed to be:
 - **Modular**: Use only what you need
@@ -800,4 +1161,5 @@ The SDK is designed to be:
 - **Reliable**: Comprehensive error handling and validation
 - **Performant**: Async support and efficient data processing
 - **Maintainable**: Clear architecture and documentation
+- **Observable**: Full visibility into system behavior with metrics, traces, and health monitoring
 
