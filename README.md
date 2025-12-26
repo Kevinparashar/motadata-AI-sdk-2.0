@@ -10,6 +10,7 @@
 - [Installation](#installation)
 - [Project Structure](#project-structure)
 - [Usage Examples](#usage-examples)
+- [Execution Flow](#execution-flow)
 - [Module Documentation](#module-documentation)
 - [Libraries](#libraries)
 - [Functions and Classes](#functions-and-classes)
@@ -290,6 +291,349 @@ api.set_auth(auth.get_access_token())
 response = api.get("/users")
 data = api.post("/users", data={"name": "John"})
 ```
+
+## Execution Flow
+
+This section explains step-by-step how the SDK processes user input and executes operations. Understanding the execution flow helps you debug issues, optimize performance, and extend the SDK functionality.
+
+### Flow 1: Agent Task Execution Flow
+
+When a user executes a task through an Agent, here's the complete step-by-step execution flow:
+
+**Step 1: User Input**
+- User calls `agent.execute_task(task)` with a task dictionary
+- Example input: `{"type": "analyze", "data": {"prompt": "Analyze this data..."}}`
+
+**Step 2: Input Validation**
+- SDK validates the task structure using `validate_dict()` from `core.validators`
+- Checks for required keys: `"type"` and `"data"`
+- Validates that `"type"` is a non-empty string
+- If validation fails, raises `ValidationError` with detailed field information
+
+**Step 3: Agent State Management**
+- Agent status changes from `"idle"` to `"processing"`
+- Event emitter emits `"task_started"` event with task information
+- Observability module records metrics (task counter incremented, trace span started)
+
+**Step 4: Task Processing (Agno Framework)**
+- If Agno agent is initialized (LLM provided), task is processed through Agno framework
+- Agno extracts prompt from task data
+- Agno agent uses LLM to process the task intelligently
+- If Agno is not available, falls back to default task processing
+
+**Step 5: AI Gateway Integration (if needed)**
+- If task requires AI processing, Agent may call AI Gateway
+- AI Gateway uses LiteLLM to make API calls to OpenAI/Anthropic/Gemini
+- LiteLLM handles provider-specific API formatting and authentication
+- Response is received and processed
+
+**Step 6: Database Operations (if needed)**
+- If task requires data storage/retrieval, Agent may interact with PostgreSQL
+- Connection pool (psycopg2) provides database connection
+- Query is executed with parameterized inputs for security
+- Results are returned to Agent
+
+**Step 7: Response Processing**
+- Agent processes the results from AI Gateway and/or Database
+- Response is formatted according to task type
+- Agent status changes from `"processing"` to `"idle"`
+
+**Step 8: Event Emission & Observability**
+- Event emitter emits `"task_completed"` event with task and result
+- Observability module records:
+  - Performance metrics (latency, throughput)
+  - Trace span is finished with duration
+  - Success counter is incremented
+
+**Step 9: Return to User**
+- Final result is returned to the user
+- If any error occurred, appropriate exception is raised (AgentError, ValidationError, etc.)
+
+**Error Handling Throughout:**
+- Any validation error → `ValidationError` with field details
+- Any agent operation error → `AgentError` with context
+- Any connection error → `ConnectionError` with connection details
+- All errors are logged and metrics are recorded
+
+---
+
+### Flow 2: AI Gateway Request Flow (LiteLLM)
+
+When a user makes an AI request through the AI Gateway, here's the execution flow:
+
+**Step 1: User Input**
+- User calls `gateway.generate(prompt, model)` or `gateway.chat(messages, model)`
+- Example: `gateway.generate("Explain quantum computing", model="gpt-4")`
+
+**Step 2: Input Validation**
+- SDK validates `prompt` (string, 1-100000 characters)
+- SDK validates `model` (string, 1-100 characters, optional)
+- SDK validates gateway configuration
+- If validation fails, raises `ValidationError`
+
+**Step 3: Input Preprocessing**
+- Input is preprocessed using `preprocess_input()` from `input_output.py`
+- Text is normalized (whitespace, newlines handled)
+- Large text is chunked if necessary
+- Data is formatted for the AI model
+
+**Step 4: LiteLLM Provider Initialization**
+- LiteLLMProvider checks if LiteLLM is installed
+- API key is retrieved from environment or provided parameter
+- LiteLLM provider is configured with API key and base URL
+
+**Step 5: Model Selection**
+- If model is not specified, default model is used (e.g., "gpt-3.5-turbo")
+- Model availability is checked against LiteLLM's model list
+- If model is invalid, raises `ModelError`
+
+**Step 6: API Request Preparation**
+- Request is formatted according to provider requirements (OpenAI/Anthropic/Gemini format)
+- Messages are structured with roles (user, assistant, system)
+- Request parameters are set (temperature, max_tokens, etc.)
+
+**Step 7: LiteLLM API Call**
+- LiteLLM makes unified API call to the selected provider
+- Handles provider-specific authentication automatically
+- Manages rate limiting and retries
+- Tracks token usage and costs
+
+**Step 8: Response Processing**
+- Raw API response is received from the provider
+- Response is parsed and structured
+- Usage information (tokens, costs) is extracted
+- Response is postprocessed using `postprocess_output()`
+
+**Step 9: Output Formatting**
+- Response is formatted into SDK's standard format
+- Includes: text content, model used, provider, usage statistics
+- Response is wrapped in ResponseModel structure
+
+**Step 10: Return to User**
+- Formatted response is returned to the user
+- If API call failed, raises `APIError` with status code and error details
+
+---
+
+### Flow 3: PostgreSQL Database Operation Flow
+
+When a user executes a database query, here's the execution flow:
+
+**Step 1: User Input**
+- User calls `db.execute_query(query, params)` or `db.execute_update(query, params)`
+- Example: `db.execute_query("SELECT * FROM users WHERE id = %s", (user_id,))`
+
+**Step 2: Input Validation**
+- SDK validates `query` (string, 1-10000 characters, non-empty)
+- SDK validates `params` (tuple, if provided)
+- Validates connection string format (must start with "postgresql://" or "postgres://")
+- If validation fails, raises `ValidationError`
+
+**Step 3: Connection Check**
+- SDK checks if database connection exists
+- If not connected, raises `ConnectionError`
+- Connection pool (psycopg2) is checked for available connections
+
+**Step 4: Connection Acquisition**
+- Connection is acquired from the connection pool
+- If pool is exhausted, waits for available connection (with timeout)
+- Connection is validated (ping test)
+
+**Step 5: Query Preparation**
+- Query string is validated for SQL injection risks (parameterized queries enforced)
+- Parameters are bound to query placeholders
+- Query is prepared for execution
+
+**Step 6: Transaction Management (if applicable)**
+- If `execute_transaction()` is called, transaction is started
+- Multiple queries are executed within the same transaction
+- Transaction is committed if all queries succeed
+- Transaction is rolled back if any query fails
+
+**Step 7: Query Execution**
+- Query is executed on PostgreSQL server via psycopg2
+- Execution is monitored for performance (latency tracking)
+- Query results are fetched from database
+
+**Step 8: Result Processing**
+- Results are converted from database format to Python dictionaries
+- Column names are preserved
+- Data types are maintained (strings, integers, dates, etc.)
+
+**Step 9: Connection Release**
+- Connection is returned to the connection pool
+- Connection is marked as available for reuse
+- Pool statistics are updated
+
+**Step 10: Observability & Logging**
+- Query execution time is recorded in performance monitor
+- Success/failure metrics are updated
+- Query is logged (with sensitive data redacted)
+- Trace span is finished
+
+**Step 11: Return to User**
+- Query results are returned to the user
+- If query failed, raises `DatabaseError` with query details (truncated for security)
+
+---
+
+### Flow 4: API Communication Flow
+
+When a user makes an external API request, here's the execution flow:
+
+**Step 1: User Input**
+- User calls `api.get(endpoint)` or `api.post(endpoint, data)`
+- Example: `api.get("/users", params={"status": "active"})`
+
+**Step 2: Input Validation**
+- SDK validates `endpoint` (string, non-empty)
+- SDK validates `params` or `data` (dict, if provided)
+- SDK validates headers (dict, if provided)
+- If validation fails, raises `ValidationError`
+
+**Step 3: Authentication**
+- If authentication is required, authenticator is called
+- OAuth2: Token is retrieved or refreshed
+- JWT: Token is generated or validated
+- API Key: Key is retrieved from configuration
+- Token is added to request headers
+
+**Step 4: Request Preparation**
+- Base URL and endpoint are combined
+- Request data is encoded using codecs (JSON, Base64, etc.)
+- Headers are merged (default + custom + auth)
+- Request timeout is set
+
+**Step 5: HTTP Request Execution**
+- HTTP request is made using requests library
+- Request method (GET, POST, PUT, DELETE) is validated
+- Request is sent to external API
+- Response is awaited
+
+**Step 6: Response Processing**
+- HTTP response is received
+- Status code is checked
+- Response body is decoded using codecs
+- Response headers are extracted
+
+**Step 7: Error Handling**
+- If status code indicates error (4xx, 5xx), raises `APIError`
+- Error includes: status code, response data, error message
+- Retry logic may be triggered (if configured)
+
+**Step 8: Response Formatting**
+- Response is wrapped in `ResponseModel` structure
+- Includes: status_code, data, headers, timestamp
+- Response is logged (with sensitive data redacted)
+
+**Step 9: Observability**
+- API call metrics are recorded (request count, latency)
+- Trace span is created for distributed tracing
+- Success/failure counters are updated
+
+**Step 10: Return to User**
+- Formatted response is returned to the user
+- If request failed, raises `APIError` with detailed error information
+
+---
+
+### Flow 5: Complete End-to-End Example Flow
+
+Here's a complete flow when a user performs a complex operation involving multiple SDK components:
+
+**Scenario**: User wants to analyze data using an AI agent, store results in database, and send notification via API.
+
+**Step 1: User Initiates Operation**
+```python
+result = agent.execute_task({
+    "type": "analyze_and_store",
+    "data": {
+        "prompt": "Analyze sales data",
+        "store_in_db": True,
+        "notify": True
+    }
+})
+```
+
+**Step 2: Agent Receives and Validates Input**
+- Agent validates task structure (type, data keys)
+- Agent status changes to "processing"
+- Event "task_started" is emitted
+
+**Step 3: Agent Processes Task via Agno**
+- Agno agent extracts prompt from task data
+- Agno uses LLM (via LiteLLM) to analyze the prompt
+- AI Gateway is called internally
+
+**Step 4: AI Gateway Processes Request**
+- LiteLLM formats request for OpenAI/Anthropic
+- API call is made to AI provider
+- Response is received and processed
+- Analysis result is generated
+
+**Step 5: Database Storage (if requested)**
+- Agent checks if `store_in_db` is True
+- PostgreSQL connection is acquired from pool
+- Analysis result is inserted into database
+- Transaction is committed
+- Connection is released
+
+**Step 6: API Notification (if requested)**
+- Agent checks if `notify` is True
+- API Communicator sends notification via external API
+- Authentication token is retrieved
+- HTTP POST request is made
+- Notification is sent
+
+**Step 7: Result Aggregation**
+- Agent combines results from:
+  - AI analysis result
+  - Database storage confirmation
+  - API notification status
+- Final result is formatted
+
+**Step 8: Observability & Events**
+- All operations are traced (distributed tracing)
+- Metrics are recorded (latency, success rates)
+- Event "task_completed" is emitted
+- Performance statistics are updated
+
+**Step 9: Return to User**
+- Complete result is returned:
+```python
+{
+    "status": "completed",
+    "analysis": "AI analysis result...",
+    "database_id": "12345",
+    "notification_sent": True,
+    "duration": 2.5  # seconds
+}
+```
+
+**Error Handling:**
+- If any step fails, appropriate exception is raised
+- Partial results are logged
+- Rollback is performed (database transaction, if applicable)
+- Error is propagated to user with context
+
+---
+
+### Key Execution Principles
+
+1. **Validation First**: All inputs are validated before processing begins
+2. **Error Handling**: Errors are caught, logged, and converted to SDK exceptions
+3. **Observability**: All operations are monitored, traced, and measured
+4. **Resource Management**: Connections, threads, and resources are properly managed
+5. **Type Safety**: Type hints ensure correct data types throughout the flow
+6. **Thread Safety**: All operations are thread-safe for concurrent use
+7. **Event-Driven**: Important events are emitted for external listeners
+8. **Modular Design**: Each component can be used independently or together
+
+Understanding these execution flows helps you:
+- Debug issues by tracing through the steps
+- Optimize performance by identifying bottlenecks
+- Extend functionality by adding custom steps
+- Monitor operations using observability metrics
 
 ## Module Documentation
 
