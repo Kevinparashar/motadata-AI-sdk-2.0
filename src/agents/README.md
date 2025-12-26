@@ -1,15 +1,18 @@
 # Agents Module
 
 ## WHY
+
 The agents module enables the creation and management of autonomous AI agents using the Agno framework. Agno provides a powerful agent framework for building intelligent, autonomous agents that can communicate, process information, and execute tasks. This module integrates Agno with the SDK's infrastructure for seamless agent management.
 
 ## WHAT
+
 This module contains:
 
 - **agent.py**: Main agent class definition integrating with Agno framework, providing core agent functionality, lifecycle management, and task execution capabilities
 - **agent_communication.py**: Communication protocol handlers (e.g., NATS, message queues) for enabling agents to send and receive messages, coordinate tasks, and share information
 
 ## HOW
+
 Create and use agents with Agno framework in your application:
 
 ```python
@@ -63,6 +66,7 @@ Agents use the Agno framework for intelligent task processing, with SDK infrastr
 - **NATSCommunicator.__init__()**: Validates servers list (non-empty, all strings)
 
 **Custom Exceptions Used:**
+
 - `ValidationError`: Invalid input parameters (replaces `ValueError`, `TypeError`)
 - `AgentError`: Agent operation failures (replaces generic `Exception`)
 - `ConnectionError`: Communication failures (replaces built-in `ConnectionError`)
@@ -70,6 +74,7 @@ Agents use the Agno framework for intelligent task processing, with SDK infrastr
 All methods raise appropriate custom exceptions with detailed error messages and context.
 
 ## Libraries
+
 This module uses the following Python standard libraries and packages:
 
 - **typing**: Type hints (List, Dict, Any, Optional, Callable)
@@ -81,6 +86,7 @@ This module uses the following Python standard libraries and packages:
 ## Functions and Classes
 
 ### agent.py
+
 - **Agent** (class): Main agent class integrating with Agno framework for autonomous AI agents
   - `__init__()`: Initialize agent with agent_id, capabilities, config, and optional LLM for Agno
   - `set_communicator()`: Set the communication handler for the agent
@@ -94,6 +100,7 @@ This module uses the following Python standard libraries and packages:
   - `get_status()`: Get agent status information
 
 ### agent_communication.py
+
 - **AgentCommunicator** (class): Base communicator for agent-to-agent communication
   - `__init__()`: Initialize communicator with protocol and config
   - `connect()`: Connect to the messaging system
@@ -107,4 +114,3 @@ This module uses the following Python standard libraries and packages:
   - `__init__()`: Initialize NATS communicator with servers
   - `connect()`: Connect to NATS server
   - `send()`: Send message via NATS
-

@@ -1,9 +1,11 @@
 # Configuration Module
 
 ## WHY
+
 The config module centralizes configuration management and logging setup for the entire SDK. It ensures consistent configuration handling, environment-based settings, and proper logging across all SDK components.
 
 ## WHAT
+
 This module contains:
 
 - **settings.py**: Configuration settings management including URLs, credentials, API endpoints, feature flags, and environment-specific configurations. Supports loading from files, environment variables, and command-line arguments
@@ -11,6 +13,7 @@ This module contains:
 - **observability.py**: Comprehensive observability module providing metrics collection, distributed tracing, performance monitoring, health checks, and integration with monitoring tools (Prometheus, Datadog, Jaeger, etc.)
 
 ## HOW
+
 Configure the SDK using the config module:
 
 ```python
@@ -73,6 +76,7 @@ Configuration can be loaded from YAML files, JSON files, environment variables, 
 - **Settings.save_to_file()**: Validates `file_path` (string, non-empty) and file format (must be .json)
 
 **Custom Exceptions Used:**
+
 - `ValidationError`: Invalid input parameters (replaces `ValueError`, `TypeError`)
 - `ConfigurationError`: Configuration and file loading errors (replaces `FileNotFoundError`, `ValueError`, `json.JSONDecodeError`)
 
@@ -83,28 +87,33 @@ All methods raise appropriate custom exceptions with detailed error messages and
 The observability module provides comprehensive monitoring capabilities:
 
 ### 1. Metrics Collection
+
 - **Counters**: Track total counts (e.g., requests_total, errors_total)
 - **Gauges**: Track current values (e.g., active_connections, queue_size)
 - **Histograms**: Track value distributions (e.g., request_duration, response_size)
 - **Labels**: Support for multi-dimensional metrics with labels
 
 ### 2. Distributed Tracing
+
 - **Trace Spans**: Create spans for operations across services
 - **Parent-Child Relationships**: Track span hierarchies
 - **Tags and Logs**: Add contextual information to spans
 - **Trace IDs**: Unique identifiers for request traces
 
 ### 3. Performance Monitoring
+
 - **Latency Tracking**: Measure operation durations with percentiles (p50, p95, p99)
 - **Throughput Monitoring**: Track operation rates per second
 - **Operation Timing**: Context managers for easy measurement
 
 ### 4. Health Checks
+
 - **Component Health**: Check health of individual components (database, API, etc.)
 - **Timeout Support**: Configurable timeouts for health checks
 - **Status Reporting**: Get health status of all registered checks
 
 ### 5. Integration Ready
+
 - **Prometheus**: Metrics can be exported in Prometheus format
 - **Datadog**: Integration hooks for Datadog APM
 - **Jaeger**: Trace format compatible with Jaeger
@@ -113,6 +122,7 @@ The observability module provides comprehensive monitoring capabilities:
 ### Usage Examples
 
 #### Metrics Example
+
 ```python
 from src.config.observability import get_observability
 
@@ -143,6 +153,7 @@ request_duration.observe(0.123)  # Record 123ms
 ```
 
 #### Tracing Example
+
 ```python
 # Start a trace span
 with obs.tracer.span("api_request", tags={"method": "GET", "endpoint": "/users"}):
@@ -150,7 +161,7 @@ with obs.tracer.span("api_request", tags={"method": "GET", "endpoint": "/users"}
     with obs.tracer.span("database_query", tags={"query": "SELECT * FROM users"}):
         # Your code here
         results = db.execute_query("SELECT * FROM users")
-    
+
     # Add tags and logs to active span
     span = obs.tracer.get_active_span()
     if span:
@@ -159,6 +170,7 @@ with obs.tracer.span("api_request", tags={"method": "GET", "endpoint": "/users"}
 ```
 
 #### Performance Monitoring Example
+
 ```python
 # Measure operation latency
 with obs.performance_monitor.measure("database_query"):
@@ -176,6 +188,7 @@ print(f"Requests per second: {throughput['rate_per_second']}")
 ```
 
 #### Health Checks Example
+
 ```python
 from src.config.observability import HealthCheck
 
@@ -194,6 +207,7 @@ for check_name, check_result in status['checks'].items():
 ```
 
 #### Full Status Example
+
 ```python
 # Get complete observability status
 status = obs.get_full_status()
@@ -205,6 +219,7 @@ print(f"Health: {status['health']}")
 ```
 
 ## Libraries
+
 This module uses the following Python standard libraries and packages:
 
 - **typing**: Type hints (Dict, Any, Optional, List, Callable)
@@ -227,6 +242,7 @@ This module uses the following Python standard libraries and packages:
 ## Functions and Classes
 
 ### settings.py
+
 - **Settings** (class): Configuration settings manager
   - `__init__()`: Initialize settings with optional config dictionary
   - `_load_from_env()`: Load configuration from environment variables
@@ -240,6 +256,7 @@ This module uses the following Python standard libraries and packages:
 - **load_config()**: Load configuration from file or environment
 
 ### logging.py
+
 - **setup_logger()**: Setup and configure a logger with custom settings (name, level, format, output_file, console)
 - **get_logger()**: Get a logger instance by name
 - **configure_logging()**: Configure root logger for the SDK
@@ -247,6 +264,7 @@ This module uses the following Python standard libraries and packages:
   - `logger` (property): Get logger for this class
 
 ### observability.py
+
 - **Observability** (class): Main observability class integrating all observability features
   - `__init__()`: Initialize observability with service name and feature flags
   - `metrics` (property): MetricsRegistry instance for metrics collection
@@ -320,4 +338,3 @@ This module uses the following Python standard libraries and packages:
 
 - **get_observability()**: Get or create global observability instance
 - **set_observability()**: Set global observability instance
-

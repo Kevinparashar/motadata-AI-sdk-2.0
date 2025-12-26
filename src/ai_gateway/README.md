@@ -1,9 +1,11 @@
 # AI Gateway Module
 
 ## WHY
+
 The AI Gateway module provides a unified interface for interacting with various AI models and services. It abstracts away the complexities of different AI providers, allowing you to switch between models or use multiple models seamlessly without changing your application code.
 
 ## WHAT
+
 This module contains:
 
 - **gateway.py**: Main gateway interface that provides a unified API for interacting with AI models, handling requests, and managing connections
@@ -12,6 +14,7 @@ This module contains:
 - **prompt_manager.py**: Prompt management system for handling prompt templates, fine-tuning configurations, and dynamic prompt generation
 
 ## HOW
+
 Use the AI Gateway to interact with AI models:
 
 ```python
@@ -59,6 +62,7 @@ The gateway handles authentication, rate limiting, error handling, and response 
 - **format_messages()**: Validates `messages` (list, non-empty, each with "role" and "content"), and `system_prompt` (string if provided)
 
 **Custom Exceptions Used:**
+
 - `ValidationError`: Invalid input parameters (replaces `ValueError`, `TypeError`)
 - `ModelError`: AI model operation failures (replaces generic exceptions)
 - `ConfigurationError`: Configuration and file loading errors (replaces `FileNotFoundError`, `ValueError`)
@@ -67,6 +71,7 @@ The gateway handles authentication, rate limiting, error handling, and response 
 All methods raise appropriate custom exceptions with detailed error messages and context information for debugging.
 
 ## Libraries
+
 This module uses the following Python standard libraries and packages:
 
 - **typing**: Type hints (Dict, Any, Optional, List, Union)
@@ -79,6 +84,7 @@ This module uses the following Python standard libraries and packages:
 ## Functions and Classes
 
 ### gateway.py
+
 - **AIGateway** (class): Main gateway interface for AI model interactions
   - `__init__()`: Initialize gateway with provider, api_key, and config
   - `set_model_integration()`: Set the model integration handler
@@ -92,6 +98,7 @@ This module uses the following Python standard libraries and packages:
   - `embed()`: Abstract method to generate embeddings
 
 ### input_output.py
+
 - **preprocess_input()**: Preprocess input data for AI model (supports str, dict, list)
 - **postprocess_output()**: Postprocess AI model output (handles JSON parsing)
 - **normalize_text()**: Normalize text input (strip, replace newlines/tabs)
@@ -99,6 +106,7 @@ This module uses the following Python standard libraries and packages:
 - **format_messages()**: Format messages for chat API with optional system prompt
 
 ### model_integration.py
+
 - **LiteLLMProvider** (class): LiteLLM provider integration - unified interface for multiple AI models
   - `__init__()`: Initialize LiteLLM provider with optional api_key and api_base
   - `generate()`: Generate response using LiteLLM (supports OpenAI, Anthropic, Gemini, etc.)
@@ -109,6 +117,7 @@ This module uses the following Python standard libraries and packages:
   - `create()`: Static method to create a LiteLLM provider instance
 
 ### prompt_manager.py
+
 - **PromptTemplate** (class): Prompt template class
   - `__init__()`: Initialize template with name, template string, and variables
   - `render()`: Render the template with provided variables
@@ -120,4 +129,3 @@ This module uses the following Python standard libraries and packages:
   - `list_templates()`: List all available template names
   - `load_templates_from_file()`: Load templates from a JSON file
   - `save_templates_to_file()`: Save templates to a JSON file
-

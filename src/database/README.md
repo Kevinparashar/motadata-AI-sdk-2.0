@@ -1,9 +1,11 @@
 # Database Integration Module
 
 ## WHY
+
 The database module provides PostgreSQL database integration with optimized connection pooling, transaction handling, and query execution. PostgreSQL is the primary database for the SDK, providing robust relational data storage with advanced features like JSON support, full-text search, and extensibility.
 
 ## WHAT
+
 This module contains:
 
 - **sql_db.py**: PostgreSQL database integration with connection pooling, query execution, and transaction handling. Optimized for production use with psycopg2.
@@ -11,6 +13,7 @@ This module contains:
 - **vector_db.py**: Vector database integration (optional) for similarity search and embeddings storage
 
 ## HOW
+
 Use PostgreSQL database in your application:
 
 ```python
@@ -63,6 +66,7 @@ PostgreSQL provides a robust, production-ready database solution with advanced f
 - **VectorDatabase.delete()**: Validates `ids` (list, non-empty)
 
 **Custom Exceptions Used:**
+
 - `ValidationError`: Invalid input parameters (replaces `ValueError`, `TypeError`)
 - `DatabaseError`: Database operation failures (replaces generic exceptions)
 - `ConnectionError`: Connection failures (replaces built-in `ConnectionError`)
@@ -70,6 +74,7 @@ PostgreSQL provides a robust, production-ready database solution with advanced f
 All methods raise appropriate custom exceptions with detailed error messages and context information for debugging.
 
 ## Libraries
+
 This module uses the following Python standard libraries and packages:
 
 - **typing**: Type hints (Dict, Any, List, Optional, Tuple)
@@ -80,6 +85,7 @@ This module uses the following Python standard libraries and packages:
 ## Functions and Classes
 
 ### sql_db.py
+
 - **PostgreSQLDatabase** (class): PostgreSQL database connection and operations (primary database)
   - `__init__()`: Initialize PostgreSQL database with connection_string and pool_size
   - `connect()`: Establish PostgreSQL connection with connection pooling (psycopg2)
@@ -92,6 +98,7 @@ This module uses the following Python standard libraries and packages:
 - **SQLDatabase** (alias): Alias for PostgreSQLDatabase for backward compatibility
 
 ### no_sql_db.py
+
 - **NoSQLDatabase** (class): Base NoSQL database connection and operations
   - `__init__()`: Initialize database with connection_string and database_name
   - `connect()`: Establish database connection
@@ -107,6 +114,7 @@ This module uses the following Python standard libraries and packages:
 - **CassandraDatabase** (class): Cassandra-specific database implementation
 
 ### vector_db.py
+
 - **VectorDatabase** (class): Base vector database for similarity search
   - `__init__()`: Initialize vector database with provider, api_key, and config
   - `connect()`: Establish connection to vector database
@@ -121,4 +129,3 @@ This module uses the following Python standard libraries and packages:
   - `load_index()`: Load FAISS index from disk
 - **PineconeDatabase** (class): Pinecone vector database implementation
   - `create_index()`: Create a new Pinecone index
-

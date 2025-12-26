@@ -1,9 +1,11 @@
 # Core Components
 
 ## WHY
+
 The core module provides fundamental building blocks and utilities that are used throughout the SDK. These components establish the foundation for data structures, concurrency handling, event management, and common utilities that other modules depend on.
 
 ## WHAT
+
 This module contains:
 
 - **data_structures.py**: Core data models and structures used across the SDK (e.g., request/response models, configuration objects)
@@ -14,6 +16,7 @@ This module contains:
 - **validators.py**: Input validation utilities for sanitizing and validating user input
 
 ## HOW
+
 Import and use core components in your code:
 
 ```python
@@ -33,9 +36,9 @@ except ValidationError as e:
 
 # Using validators
 validated_string = validate_string(
-    user_input, 
-    field_name="username", 
-    min_length=3, 
+    user_input,
+    field_name="username",
+    min_length=3,
     max_length=20
 )
 ```
@@ -67,13 +70,16 @@ These components are typically used internally by other SDK modules, but can als
 All exceptions include detailed error messages and optional `details` dictionary for debugging.
 
 ## Version Management
+
 The SDK version is managed in `src/__version__.py`:
+
 ```python
 from src import __version__
 print(__version__)  # "0.1.0"
 ```
 
 ## Libraries
+
 This module uses the following Python standard libraries and packages:
 
 - **typing**: Type hints for function parameters and return types (Dict, Any, Optional, List, Callable, Coroutine)
@@ -88,7 +94,9 @@ This module uses the following Python standard libraries and packages:
 - **pathlib**: Object-oriented filesystem paths
 
 ## Configuration Files
+
 This module works with the following project configuration:
+
 - **pyproject.toml**: Project metadata and tool configurations (black, isort, mypy, pytest)
 - **.coveragerc**: Test coverage configuration
 - **requirements.txt**: Production dependencies
@@ -98,11 +106,13 @@ This module works with the following project configuration:
 ## Functions and Classes
 
 ### data_structures.py
+
 - **RequestModel** (class): Base request model for API requests with method, URL, headers, params, data, and timestamp
 - **ResponseModel** (class): Base response model for API responses with status_code, data, headers, timestamp, and error
 - **ConfigModel** (class): Configuration data model with api_url, api_key, timeout, retry_count, and settings
 
 ### concurrency.py
+
 - **AsyncExecutor** (class): Async executor for running async functions with event loop management
   - `execute()`: Execute a function asynchronously
   - `run()`: Run a coroutine in the event loop
@@ -117,6 +127,7 @@ This module works with the following project configuration:
   - `value` (property): Get the current value
 
 ### event_handler.py
+
 - **EventType** (enum): Event type enumeration (INFO, WARNING, ERROR, SUCCESS, CUSTOM)
 - **EventHandler** (class): Base event handler for managing events
   - `on()`: Register an event handler
@@ -130,6 +141,7 @@ This module works with the following project configuration:
   - `once()`: Register a one-time event handler
 
 ### utils.py
+
 - **setup_logger()**: Setup and configure a logger with custom format and output
 - **validate_config()**: Validate configuration dictionary for required keys (raises ValidationError)
 - **get_env_var()**: Get environment variable with optional default
@@ -137,6 +149,7 @@ This module works with the following project configuration:
 - **merge_dicts()**: Merge multiple dictionaries into one
 
 ### exceptions.py
+
 - **SDKError** (class): Base exception for all SDK errors with message and details support
 - **ConfigurationError** (class): Raised when there's a configuration error
 - **AuthenticationError** (class): Raised when authentication fails
@@ -150,7 +163,12 @@ This module works with the following project configuration:
 - **EventHandlerError** (class): Raised when event handler operation fails
 
 ### validators.py
+
 - **validate_string()**: Validate and sanitize string input with length constraints
 - **validate_dict()**: Validate dictionary input with required keys checking
 - **validate_list()**: Validate list input with item count constraints
-
+- **validate_int()**: Validate integer input with range checking
+- **validate_bool()**: Validate boolean input
+- **validate_url()**: Validate URL format
+- **validate_email()**: Validate email format
+- **validate_uuid()**: Validate UUID format

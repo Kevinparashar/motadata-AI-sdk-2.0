@@ -1,9 +1,11 @@
 # API Communication Module
 
 ## WHY
+
 The API module handles all external API communication, authentication, and request/response management. It provides a robust foundation for making HTTP requests, WebSocket connections, and managing API credentials securely.
 
 ## WHAT
+
 This module contains:
 
 - **api_communicator.py**: Core API communication methods for HTTP requests (GET, POST, PUT, DELETE) and WebSocket connections. Handles connection pooling, retries, and error handling
@@ -11,6 +13,7 @@ This module contains:
 - **authentication.py**: Token-based authentication mechanisms including OAuth2, JWT token management, API key handling, and session management
 
 ## HOW
+
 Use the API module to communicate with external services:
 
 ```python
@@ -53,6 +56,7 @@ The module handles authentication refresh, rate limiting, error retries, and res
 - **send_request()**: Validates `method` (must be GET/POST/PUT/DELETE/PATCH), `url` (string), and `timeout` (positive)
 
 **Custom Exceptions Used:**
+
 - `ValidationError`: Invalid input parameters (replaces `ValueError`, `TypeError`)
 - `APIError`: API request failures with status codes and response data (replaces generic exceptions)
 - `AuthenticationError`: Authentication failures (replaces generic exceptions)
@@ -61,6 +65,7 @@ The module handles authentication refresh, rate limiting, error retries, and res
 All methods raise appropriate custom exceptions with detailed error messages, status codes (for API errors), and context information.
 
 ## Libraries
+
 This module uses the following Python standard libraries and packages:
 
 - **typing**: Type hints (Dict, Any, Optional, List)
@@ -73,6 +78,7 @@ This module uses the following Python standard libraries and packages:
 ## Functions and Classes
 
 ### api_communicator.py
+
 - **APICommunicator** (class): Base API communicator for HTTP and WebSocket
   - `__init__()`: Initialize communicator with base_url, timeout, and headers
   - `set_auth()`: Set authentication token
@@ -90,6 +96,7 @@ This module uses the following Python standard libraries and packages:
   - `is_connected` (property): Check if connected to WebSocket
 
 ### api_methods.py
+
 - **encode_data()**: Encode data for API transmission
 - **decode_data()**: Decode data from API response
 - **send_request()**: Send an HTTP request with authentication
@@ -97,6 +104,7 @@ This module uses the following Python standard libraries and packages:
 - **parse_response()**: Parse API response into structured format
 
 ### authentication.py
+
 - **Authenticator** (abstract class): Base authenticator class
   - `get_access_token()`: Abstract method to get access token
   - `is_token_valid()`: Check if current token is valid
@@ -112,4 +120,3 @@ This module uses the following Python standard libraries and packages:
   - `__init__()`: Initialize API key authenticator with api_key
   - `get_access_token()`: Get API key
   - `is_token_valid()`: API keys don't expire
-

@@ -1,9 +1,11 @@
 # Tests Module
 
 ## WHY
+
 The tests module contains comprehensive unit tests for all SDK components. Having a robust test suite ensures code quality, prevents regressions, and provides documentation through examples of how each component should be used.
 
 ## WHAT
+
 This module contains:
 
 - **test_agents.py**: Unit tests for agent functionality, agent communication, lifecycle management, and agent coordination scenarios
@@ -13,6 +15,7 @@ This module contains:
 - **test_api.py**: Unit tests for API communication, authentication mechanisms, request/response handling, and error scenarios
 
 ## HOW
+
 Run the test suite:
 
 ```bash
@@ -38,6 +41,7 @@ pytest -m "not slow"
 ```
 
 Tests use the pytest framework and include:
+
 - Unit tests for individual components
 - Integration tests for module interactions
 - Mock objects for external dependencies
@@ -46,13 +50,16 @@ Tests use the pytest framework and include:
 Each test file focuses on a specific module and tests both happy paths and error scenarios.
 
 ## Test Fixtures
+
 The `conftest.py` file provides shared fixtures:
+
 - **sample_agent_config**: Sample agent configuration dictionary
 - **sample_task**: Sample task dictionary for testing
 - **sample_api_config**: Sample API configuration dictionary
 - **sample_db_config**: Sample database configuration dictionary
 
 Usage:
+
 ```python
 def test_agent_with_fixture(sample_agent_config):
     agent = Agent(**sample_agent_config)
@@ -60,6 +67,7 @@ def test_agent_with_fixture(sample_agent_config):
 ```
 
 ## Libraries
+
 This module uses the following Python standard libraries and packages:
 
 - **unittest**: Python's built-in unit testing framework
@@ -75,6 +83,7 @@ This module uses the following Python standard libraries and packages:
 - **src.api**: APICommunicator and authentication classes for testing
 
 ## Configuration Files
+
 - **conftest.py**: Shared pytest fixtures for all tests
 - **.coveragerc**: Coverage configuration file
 - **requirements-test.txt**: Test-specific dependencies
@@ -83,6 +92,7 @@ This module uses the following Python standard libraries and packages:
 ## Functions and Classes
 
 ### test_agents.py
+
 - **TestAgent** (class): Test cases for Agent class
   - `setUp()`: Set up test fixtures
   - `test_agent_creation()`: Test agent creation
@@ -93,6 +103,7 @@ This module uses the following Python standard libraries and packages:
   - `test_communicator_creation()`: Test communicator creation
 
 ### test_ai_gateway.py
+
 - **TestAIGateway** (class): Test cases for AIGateway
   - `setUp()`: Set up test fixtures
   - `test_gateway_creation()`: Test gateway creation
@@ -103,6 +114,7 @@ This module uses the following Python standard libraries and packages:
   - `test_list_templates()`: Test listing templates
 
 ### test_database.py
+
 - **TestSQLDatabase** (class): Test cases for SQLDatabase
   - `setUp()`: Set up test fixtures
   - `test_database_creation()`: Test database creation
@@ -114,6 +126,7 @@ This module uses the following Python standard libraries and packages:
   - `test_database_creation()`: Test database creation
 
 ### test_codecs.py
+
 - **TestJSONCodec** (class): Test cases for JSONCodec
   - `setUp()`: Set up test fixtures
   - `test_encode_decode()`: Test encoding and decoding
@@ -126,6 +139,7 @@ This module uses the following Python standard libraries and packages:
   - `test_list_codecs()`: Test listing codecs
 
 ### test_api.py
+
 - **TestAPICommunicator** (class): Test cases for APICommunicator
   - `setUp()`: Set up test fixtures
   - `test_communicator_creation()`: Test communicator creation
@@ -140,4 +154,3 @@ This module uses the following Python standard libraries and packages:
   - `setUp()`: Set up test fixtures
   - `test_authenticator_creation()`: Test authenticator creation
   - `test_get_access_token()`: Test getting access token
-

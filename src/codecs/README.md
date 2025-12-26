@@ -1,15 +1,18 @@
 # Codecs Module
 
 ## WHY
+
 The codecs module provides custom encoding and decoding functionality for transforming data between different formats. This is essential for handling custom data serialization, protocol-specific encoding, and data transformation requirements that standard libraries don't cover.
 
 ## WHAT
+
 This module contains:
 
 - **custom_codec.py**: Custom encoding and decoding logic for specialized data formats, protocol-specific serialization, and proprietary data structures
 - **codec_utils.py**: Helper functions and utilities for codec operations, including format validation, encoding/decoding error handling, and codec registry management
 
 ## HOW
+
 Use codecs to transform data:
 
 ```python
@@ -45,12 +48,14 @@ Codecs are particularly useful when working with custom protocols, binary format
 - **JSONCodec.decode()**: Validates data can be JSON deserialized
 
 **Custom Exceptions Used:**
+
 - `ValidationError`: Invalid input parameters (replaces `ValueError`, `TypeError`)
 - `CodecError`: Encoding/decoding failures (replaces `json.JSONDecodeError`, `UnicodeDecodeError`, and generic exceptions)
 
 All methods raise appropriate custom exceptions with detailed error messages and context information for debugging.
 
 ## Libraries
+
 This module uses the following Python standard libraries and packages:
 
 - **typing**: Type hints (Any, Dict, Optional, Type)
@@ -61,6 +66,7 @@ This module uses the following Python standard libraries and packages:
 ## Functions and Classes
 
 ### custom_codec.py
+
 - **Codec** (abstract class): Abstract base class for codecs
   - `encode()`: Abstract method to encode data to bytes
   - `decode()`: Abstract method to decode bytes to data
@@ -79,10 +85,10 @@ This module uses the following Python standard libraries and packages:
   - `decode()`: Decode data using the configured codec
 
 ### codec_utils.py
+
 - **register_codec()**: Register a custom codec in the codec registry
 - **get_codec()**: Get a codec instance by name
 - **list_codecs()**: List all registered codecs
 - **validate_encoded_data()**: Validate that data can be decoded with the given codec
 - **encode_with_format()**: Quick encode function with format specification
 - **decode_with_format()**: Quick decode function with format specification
-
