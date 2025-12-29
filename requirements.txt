@@ -1,9 +1,14 @@
 # Metadata Python SDK - Production Dependencies
 # Core dependencies for the SDK
 
+# Metadata Python SDK - Production Dependencies
+# Core dependencies for the SDK
+# NOTE: This file is kept for compatibility. Use pyproject.toml and UV for dependency management.
+# Install with: uv sync (recommended) or pip install -r requirements.txt
+
 # Core dependencies
 requests>=2.28.0,<3.0.0
-pydantic>=1.8.2,<2.0.0
+pydantic>=2.0.0,<3.0.0
 
 # Database - PostgreSQL
 psycopg2-binary>=2.9.1,<3.0.0
@@ -13,9 +18,6 @@ litellm>=1.0.0,<2.0.0
 
 # Agent Framework - Agno
 agno>=0.1.0,<1.0.0
-
-# Asynchronous operations
-asyncio>=3.4.3
 
 # Configuration
 python-dotenv>=0.19.0,<1.0.0

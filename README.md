@@ -56,16 +56,53 @@ Instead of writing boilerplate code for each AI provider, database, or API integ
 
 ### 1. Installation
 
+**Prerequisites:**
+- Python 3.8.1 or higher
+- [UV](https://github.com/astral-sh/uv) package manager (fast Python package installer)
+
+**Install UV:**
+```bash
+# Install UV (if not already installed)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+# Or using pip
+pip install uv
+```
+
+**Setup the project:**
 ```bash
 # Clone the repository
 git clone <repository-url>
 cd motadata-ai-sdk
 
-# Install dependencies
-pip install -r requirements.txt
+# Install dependencies and create virtual environment (UV will handle this automatically)
+uv sync
 
-# Or install in development mode
-pip install -e .
+# Or install with development dependencies
+uv sync --extra dev
+
+# Or install with test dependencies
+uv sync --extra test
+
+# Or install with both dev and test dependencies
+uv sync --all-extras
+```
+
+**Using UV commands:**
+```bash
+# Run commands in the UV environment
+uv run python your_script.py
+
+# Run tests
+uv run pytest
+
+# Add a new dependency
+uv add package-name
+
+# Add a development dependency
+uv add --dev package-name
+
+# Update dependencies
+uv sync --upgrade
 ```
 
 ### 2. Your First AI Agent
@@ -118,8 +155,8 @@ results = db.execute_query("SELECT * FROM users WHERE id = %s", (user_id,))
 
 ### Requirements
 
-- Python 3.7 or higher
-- pip package manager
+- Python 3.8.1 or higher
+- [UV](https://github.com/astral-sh/uv) package manager (recommended) or pip
 
 ### Install from Source
 
@@ -128,11 +165,14 @@ results = db.execute_query("SELECT * FROM users WHERE id = %s", (user_id,))
 git clone <repository-url>
 cd motadata-ai-sdk
 
-# Install the package
-pip install -r requirements.txt
+# Install dependencies and create virtual environment (UV handles this automatically)
+uv sync
 
-# Or install in editable mode for development
-pip install -e .
+# Or install with development dependencies
+uv sync --extra dev
+
+# Or install with all extras (dev + test)
+uv sync --all-extras
 ```
 
 ### Verify Installation
@@ -190,7 +230,9 @@ motadata-ai-sdk/
 │       └── test_api.py
 │
 ├── README.md                     # This file
-├── requirements.txt             # Python dependencies
+├── pyproject.toml               # Project configuration and dependencies (UV)
+├── uv.lock                      # UV lock file (dependency versions)
+├── requirements.txt             # Legacy pip dependencies (use pyproject.toml)
 ├── setup.py                     # Package setup
 └── LICENSE                      # License information
 ```
@@ -861,7 +903,9 @@ The SDK includes standard configuration files following industry best practices:
 - **.gitattributes** - Line ending and file type handling for cross-platform compatibility
 
 ### Dependency Management
-- **requirements.txt** - Production dependencies
+- **pyproject.toml** - Project configuration and dependencies (UV format)
+- **uv.lock** - Locked dependency versions (managed by UV)
+- **requirements.txt** - Legacy pip dependencies (kept for compatibility, use pyproject.toml)
 - **requirements-dev.txt** - Development dependencies (linting, formatting, testing tools)
 - **requirements-test.txt** - Test-specific dependencies (pytest, coverage, etc.)
 
@@ -898,13 +942,17 @@ We welcome contributions! Here's how you can help:
 git clone <repository-url>
 cd motadata-ai-sdk
 
-# Install in development mode
-pip install -e .
+# Install UV (if not already installed)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Install dependencies with development extras
+uv sync --all-extras
 
 # Run tests
-pytest src/tests/
+uv run pytest src/tests/
 
 # Run tests with coverage
+uv run pytest src/tests/ --cov=src --cov-report=html
 pytest src/tests/ --cov=src --cov-report=html
 ```
 

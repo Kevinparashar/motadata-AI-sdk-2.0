@@ -111,6 +111,10 @@ ENV/
 env.bak/
 venv.bak/
 
+# UV
+.venv/
+# Note: uv.lock should be committed for reproducible builds (like package-lock.json)
+
 # Spyder project settings
 .spyderproject
 .spyderproject
